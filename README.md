@@ -3,7 +3,7 @@
 
 [Sense/Net ECM](http://sensenet.com), an enterprise content management platform that is capable of handling many users and a huge number of content in a single Content Repository, constantly evolves. This requires a stable **benchmarking method** that lets us measure the impact of our decisions along the way. It may also help measuring performance on specific implementations, not just the core platform.
 
-![Benchmark diagram 1](/images/benchmark-diagram1.png "Benchmark diagram 1")
+![Benchmark diagram 1](http://wiki.sensenet.com/images/6/66/Becnhmark-01.png "Benchmark diagram 1")
 
 ## Table of contents
 1. [How it works](#HowItWorks)
@@ -156,8 +156,6 @@ Below that there is a running log table that can be visualized as a graph. Follo
 2. Select all relevant columns: click the "D" column header and drag right to the last column (the first 3 columns are not needed for the chart).
 3. Click the "INSERT" tab in the ribbon, click the "Insert line chart" and select the first 2-D line chart.
 4. Resize the chart if necessary.
-
-![Benchmark diagram 2](/images/benchmark-diagram2.png "Benchmark diagram 2")
 
 On the chart the horizontal lines are the speed category limits. You can see the average response times for each speed category. The first section (on the left with many zeroes) is whe warmup. 
 
