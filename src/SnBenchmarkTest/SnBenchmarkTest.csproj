@@ -39,8 +39,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="SenseNet.Tools">
-      <HintPath>..\references\SenseNet.Tools.dll</HintPath>
+    <Reference Include="SenseNet.Tools, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\SenseNet.Tools.2.1.0.0\lib\net45\SenseNet.Tools.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
   </ItemGroup>
@@ -65,6 +66,9 @@
       <Project>{52e34237-7594-420f-801a-fddc1a07ef43}</Project>
       <Name>SnBenchmark</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
