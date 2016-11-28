@@ -1,0 +1,25 @@
+﻿; get main page
+REQ: /
+WAIT: 2000
+
+; quick search by a simple word: "demo" (work with REST API but get the search result page once)
+REQ: GET /OData.svc/Root/Sites/Default_Site?$top=10&query=demo&$inlinecount=allpages&metadata=no
+	DATA: {}
+REQ: /features/Search?text=demo
+WAIT: 2000
+
+; get 2nd page of the search result
+REQ: /OData.svc/Root/Sites/Default_Site?$top=10&$skip=10&query=demo&$inlinecount=allpages&metadata=no
+WAIT: 2000
+
+; get 3rd page of the search result
+REQ: /OData.svc/Root/Sites/Default_Site?$top=10&$skip=20&query=demo&$inlinecount=allpages&metadata=no
+WAIT: 2000
+
+; get 4th page of the search result
+REQ: /OData.svc/Root/Sites/Default_Site?$top=10&$skip=30&query=demo&$inlinecount=allpages&metadata=no
+WAIT: 2000
+
+; browse a content from the hits
+REQ: /OData.svc/infos/features('kpiworkspacesinfo')
+WAIT: 8000

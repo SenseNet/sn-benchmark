@@ -1,0 +1,39 @@
+﻿; PROFILE DESCRIPTION: Small content editor task
+
+; Go to the "local homepage"
+REQ: GET /OData.svc/workspaces/Project/madridprojectworkspace
+
+WAIT: 2000
+
+; List the memos folder
+REQ: GET /OData.svc/workspaces/Project/madridprojectworkspace/Memos?$select=Name,Id,DisplayName,Description&metadata=no
+SPEED: Normal
+
+WAIT: 2000
+
+; Create a new memo and memorize its name
+REQ: POST /OData.svc/workspaces/Project/madridprojectworkspace/Memos?$select=Name,Id,DisplayName,Description&metadata=no
+DATA: models=[{"__ContentType":"Memo","Description":"asdf qwer"}]
+SPEED: Slow
+VAR: @Name = @Response.d.Name
+
+WAIT: 5000
+
+; Modify a field of the created content
+REQ: PATCH /OData.svc/workspaces/Project/madridprojectworkspace/Memos('<<@Name>>')?$select=Name,Id,DisplayName,Description&metadata=no
+DATA: models=[{"Description":"asdf qwer yxcv"}]
+SPEED: Slow
+
+WAIT: 2000
+
+; See the content in the list
+REQ: GET /OData.svc/workspaces/Project/madridprojectworkspace/Memos?$select=Name,Id,DisplayName,Description&metadata=no
+
+WAIT: 3000
+
+; Delete (cleanup step, not part of the Editor role)
+REQ: POST /OData.svc/workspaces/Project/madridprojectworkspace/Memos('<<@Name>>')/Delete
+DATA: {"permanent":true}
+SPEED: Slow
+
+WAIT: 1
