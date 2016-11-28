@@ -152,6 +152,7 @@ The benchmark result cannot be an exact value because the limits are set by us a
 The output file is the CSV mutation of the verbose console that can be opened in *Microsoft Excel*. The first few lines of the file contain the execution values (e.g. start time) for logging purposes.
 
 Below that there is a running log table that can be visualized as a graph. Follow these steps to do that.
+
 1. Delete the benchmark info at the top, so that the table header becomes the first row.
 2. Select all relevant columns: click the "D" column header and drag right to the last column (the first 3 columns are not needed for the chart).
 3. Click the "INSERT" tab in the ribbon, click the "Insert line chart" and select the first 2-D line chart.
@@ -161,7 +162,9 @@ On the chart the horizontal lines are the speed category limits. You can see the
 
 (On the right side there is a break in all lines that is caused by an extra line in the table. This line is the benchmark result that was written when one of the average values reached the defined limit. You can delete the line and the break disappears.)
 
-As you can see on the diagram above, there was a point during the benchmark when average request times started to grow significantly. That point is way before reaching the defined speed limit (the flat line above), but that is the purpose of this benchmark: we are looking for the optimal set of profiles that can be served by the portal without performance loss. So in the example above the maximum number of profiles (in this hardware environment) is determined by the red arrows. 
+![Benchmark diagram 2](http://wiki.sensenet.com/images/f/f8/Becnhmark-02.png "Benchmark diagram 2")
+
+Usually there is a point during the benchmark when average request times start to grow significantly. That point is way before reaching the defined speed limit (the flat line on the chart above), but that is the purpose of this benchmark: we are looking for the optimal set of profiles that can be served by the portal without performance loss. So in the example above the maximum number of profiles (in this hardware environment) is determined by the red arrows. 
 
 ## Profile example: the Visitor
 <a name="ProfileExampleTheVisitor"></a>
