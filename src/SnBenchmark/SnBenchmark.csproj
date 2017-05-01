@@ -70,6 +70,8 @@
     <Compile Include="Expression\WaitExpression.cs" />
     <Compile Include="Parser\Lexer.cs" />
     <Compile Include="Parser\Token.cs" />
+    <Compile Include="PathSet.cs" />
+    <Compile Include="PathSetExpression.cs" />
     <Compile Include="Web.cs" />
     <Compile Include="Profile.cs" />
     <Compile Include="Parser\ProfileParser.cs" />

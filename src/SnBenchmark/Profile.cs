@@ -1,6 +1,7 @@
 ﻿using SnBenchmark.Expression;
 using SnBenchmark.Parser;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -12,12 +13,34 @@ namespace SnBenchmark
     /// Represents a series of actions that a typical uses performs on a site. E.g. a Visitor profile
     /// may consist of a few browsing steps, a search request and visiting one of the results.
     /// </summary>
-    [DebuggerDisplay("{Id}:{Name}")]
+    [DebuggerDisplay("{Id}:{Name}[{_initialIndex}]")]
     internal class Profile : IExecutionContext
     {
+        private static volatile int _lastId;
+
+        private static object InitialIndexesLock = new object();
+        private static readonly Dictionary<string, int> InitialIndexes = new Dictionary<string, int>();
+
+        internal static int GetNextInitialIndexByProfileName(string name)
+        {
+            lock (InitialIndexesLock)
+            {
+                int value;
+                if (InitialIndexes.TryGetValue(name, out value))
+                    ++value;
+                InitialIndexes[name] = value;
+                return value;
+            }
+        }
+
+        internal static void ResetIdAndIndexes()
+        {
+            _lastId = 0;
+            InitialIndexes.Clear();
+        }
+
         //======================================================== Properties
 
-        private static volatile int _lastId;
         public int Id { get; }
 
         public string Name { get; }
@@ -28,9 +51,10 @@ namespace SnBenchmark
 
         public Profile(string name, List<BenchmarkActionExpression> actions)
         {
-            Id = ++_lastId;
             Name = name;
             Actions = actions;
+            Id = ++_lastId;
+            _initialIndex = GetNextInitialIndexByProfileName(name);
         }
 
         //======================================================== Static API
@@ -86,10 +110,31 @@ namespace SnBenchmark
             _running = false;
         }
 
+
+        private readonly int _initialIndex; // Profile index (in same profiles)
+        private readonly Dictionary<string, int> _indexes = new Dictionary<string, int>(); // PathSet.Name --> index
+        internal int GetIndex(string name)
+        {
+            int result;
+            if (!_indexes.TryGetValue(name, out result))
+            {
+                result = _initialIndex;
+                _indexes[name] = result;
+            }
+            return result;
+        }
+
+        internal void SetIndex(string name, int value)
+        {
+            _indexes[name] = value;
+        }
+
         //======================================================== IExecutionContext members
 
         private static readonly Dictionary<string, object> GlobalScope = new Dictionary<string, object>();
         private readonly Dictionary<string, object> _localScope = new Dictionary<string, object>();
+
+        public Profile CurrentProfile => this;
 
         void IExecutionContext.SetVariable(string name, object value)
         {
