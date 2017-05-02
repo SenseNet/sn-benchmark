@@ -12,7 +12,7 @@ namespace SnBenchmark
 
     internal class PathSetExpression
     {
-        internal string Name { get; private set; }
+        internal PathSet PathSet { get; private set; }
         internal PathSetOperation Operation { get; private set; }
         internal int AbsoluteIndex { get; private set; }
         internal PathSetTransform[] TransformationSteps { get; private set; }
@@ -68,7 +68,7 @@ namespace SnBenchmark
             // Return with a new product.
             return new PathSetExpression
             {
-                Name = pathSet.Name,
+                PathSet = pathSet,
                 Operation = operation,
                 AbsoluteIndex = absoluteIndex,
                 TransformationSteps =
@@ -79,8 +79,50 @@ namespace SnBenchmark
 
         public string Execute(IExecutionContext context)
         {
-            //UNDONE: implement PathSetExpression.Execute(int baseIndex)
-            throw new NotImplementedException();
+            var profile = context.CurrentProfile;
+            var name = PathSet.Name;
+            var count = PathSet.Paths.Length;
+            int index;
+            switch (Operation)
+            {
+                case PathSetOperation.First:
+                    index = profile.InitialIndex;
+                    break;
+                case PathSetOperation.Current:
+                    index = profile.GetIndex(name);
+                    break;
+                case PathSetOperation.Next:
+                    index = profile.GetIndex(name) + 1;
+                    break;
+                case PathSetOperation.Index:
+                    index = AbsoluteIndex;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException($"Unknown PathSetOperation: {Operation}");
+            }
+
+            index = index%count;
+            profile.SetIndex(name, index);
+
+            var path = PathSet.Paths[index];
+
+            foreach (var transform in TransformationSteps)
+            {
+                switch (transform)
+                {
+                    case PathSetTransform.Parent:
+                        path = SenseNet.Client.RepositoryPath.GetParentPath(path);
+                        break;
+                    case PathSetTransform.ODataEntity:
+                        var req = new SenseNet.Client.ODataRequest {Path = path, IsCollectionRequest = true};
+                        path = req.ToString();
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException($"Unknown PathSetTransform: {transform}");
+                }
+            }
+
+            return path;
         }
     }
 }

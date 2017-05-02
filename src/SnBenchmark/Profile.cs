@@ -1,7 +1,6 @@
 ﻿using SnBenchmark.Expression;
 using SnBenchmark.Parser;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -13,7 +12,7 @@ namespace SnBenchmark
     /// Represents a series of actions that a typical uses performs on a site. E.g. a Visitor profile
     /// may consist of a few browsing steps, a search request and visiting one of the results.
     /// </summary>
-    [DebuggerDisplay("{Id}:{Name}[{_initialIndex}]")]
+    [DebuggerDisplay("{Id}:{Name}[{InitialIndex}]")]
     internal class Profile : IExecutionContext
     {
         private static volatile int _lastId;
@@ -36,7 +35,8 @@ namespace SnBenchmark
         internal static void ResetIdAndIndexes()
         {
             _lastId = 0;
-            InitialIndexes.Clear();
+            lock (InitialIndexesLock)
+                InitialIndexes.Clear();
         }
 
         //======================================================== Properties
@@ -54,7 +54,7 @@ namespace SnBenchmark
             Name = name;
             Actions = actions;
             Id = ++_lastId;
-            _initialIndex = GetNextInitialIndexByProfileName(name);
+            InitialIndex = GetNextInitialIndexByProfileName(name);
         }
 
         //======================================================== Static API
@@ -111,14 +111,14 @@ namespace SnBenchmark
         }
 
 
-        private readonly int _initialIndex; // Profile index (in same profiles)
+        internal int InitialIndex { get; }
         private readonly Dictionary<string, int> _indexes = new Dictionary<string, int>(); // PathSet.Name --> index
         internal int GetIndex(string name)
         {
             int result;
             if (!_indexes.TryGetValue(name, out result))
             {
-                result = _initialIndex;
+                result = InitialIndex;
                 _indexes[name] = result;
             }
             return result;
