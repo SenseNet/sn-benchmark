@@ -232,7 +232,9 @@ namespace SnBenchmarkTest
         [TestMethod]
         public void Profile_ParsePathSet()
         {
-            var value = "BigFiles Size:>236000 AND TypeIs:File AND InTree:'/Root/Benchmark/Files' .AUTOFILTERS:OFF";
+            var name = "BigFiles";
+            var definition = "Size:>236000 AND TypeIs:File AND InTree:'/Root/Benchmark/Files' .AUTOFILTERS:OFF";
+            var value = $"{name} {definition}";
             var speedItems = new List<string> { RequestExpression.NormalSpeed };
             var src = $"PATHSET: {value}";
             var parser = new ProfileParser(src, speedItems);
@@ -240,7 +242,10 @@ namespace SnBenchmarkTest
             var result = parser.Parse();
 
             Assert.AreEqual(1, result.Count);
-            Assert.Inconclusive();
+            Assert.IsTrue(result[0] is PathSetExpression);
+            var psetExp = (PathSetExpression)result[0];
+            Assert.AreEqual(name, psetExp.Name);
+            Assert.AreEqual(definition, psetExp.Definition);
         }
 
     }

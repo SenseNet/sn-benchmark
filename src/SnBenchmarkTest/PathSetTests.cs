@@ -435,6 +435,62 @@ namespace SnBenchmarkTest
                 Assert.AreEqual(expectedUrls[i], actualUrls[i]);
         }
 
+        [TestMethod]
+        public void PathSet_ExprExec_Parent()
+        {
+            var profile0 = new Profile("Profile0", new List<BenchmarkActionExpression>());
+            PathSet.Create("Profile0", "PathSet0", new[] { "/Root/A0/B0/Path0", "/Root/A1/B1/Path1", "/Root/A2/B2/Path2" });
+
+            var expectedUrl = "/OData.svc/Root/A0/B0?metadata=no";
+            var actualUrl1 = PathSet.ResolveUrl("/OData.svc##PathSet0.current.PARENT##?metadata=no", profile0);
+
+            Assert.AreEqual(expectedUrl, actualUrl1);
+        }
+        [TestMethod]
+        public void PathSet_ExprExec_Entity()
+        {
+            var profile0 = new Profile("Profile0", new List<BenchmarkActionExpression>());
+            PathSet.Create("Profile0", "PathSet0", new[] { "/Root/A0/B0/Path0", "/Root/A1/B1/Path1", "/Root/A2/B2/Path2" });
+
+            var expectedUrl = "/OData.svc/Root/A0/B0('Path0')?metadata=no";
+            var actualUrl1 = PathSet.ResolveUrl("/OData.svc##PathSet0.current.ODATAENTITY##?metadata=no", profile0);
+
+            Assert.AreEqual(expectedUrl, actualUrl1);
+        }
+        [TestMethod]
+        public void PathSet_ExprExec_ParentParent()
+        {
+            var profile0 = new Profile("Profile0", new List<BenchmarkActionExpression>());
+            PathSet.Create("Profile0", "PathSet0", new[] { "/Root/A0/B0/Path0", "/Root/A1/B1/Path1", "/Root/A2/B2/Path2" });
+
+            var expectedUrl = "/OData.svc/Root/A0?metadata=no";
+            var actualUrl1 = PathSet.ResolveUrl("/OData.svc##PathSet0.current.PARENT.PARENT##?metadata=no", profile0);
+
+            Assert.AreEqual(expectedUrl, actualUrl1);
+        }
+        [TestMethod]
+        public void PathSet_ExprExec_ParentParentEntity()
+        {
+            var profile0 = new Profile("Profile0", new List<BenchmarkActionExpression>());
+            PathSet.Create("Profile0", "PathSet0", new[] { "/Root/A0/B0/Path0", "/Root/A1/B1/Path1", "/Root/A2/B2/Path2" });
+
+            var expectedUrl = "/OData.svc/Root('A0')?metadata=no";
+            var actualUrl1 = PathSet.ResolveUrl("/OData.svc##PathSet0.current.PARENT.PARENT.ODATAENTITY##?metadata=no", profile0);
+
+            Assert.AreEqual(expectedUrl, actualUrl1);
+        }
+        [TestMethod]
+        public void PathSet_ExprExec_ParentParentParentEntity()
+        {
+            var profile0 = new Profile("Profile0", new List<BenchmarkActionExpression>());
+            PathSet.Create("Profile0", "PathSet0", new[] { "/Root/A0/B0/Path0", "/Root/A1/B1/Path1", "/Root/A2/B2/Path2" });
+
+            var expectedUrl = "/OData.svc/('Root')?metadata=no";
+            var actualUrl1 = PathSet.ResolveUrl("/OData.svc##PathSet0.current.PARENT.PARENT.PARENT.ODATAENTITY##?metadata=no", profile0);
+
+            Assert.AreEqual(expectedUrl, actualUrl1);
+        }
+
         #endregion
     }
 }

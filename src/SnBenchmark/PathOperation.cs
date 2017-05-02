@@ -111,11 +111,10 @@ namespace SnBenchmark
                 switch (transform)
                 {
                     case PathSetTransform.Parent:
-                        path = SenseNet.Client.RepositoryPath.GetParentPath(path);
+                        path = GetParentPath(path);
                         break;
                     case PathSetTransform.ODataEntity:
-                        var req = new SenseNet.Client.ODataRequest {Path = path, IsCollectionRequest = true};
-                        path = req.ToString();
+                        path = MakeEntityPath(path);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException($"Unknown PathSetTransform: {transform}");
@@ -123,6 +122,26 @@ namespace SnBenchmark
             }
 
             return path;
+        }
+
+        private string GetParentPath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return string.Empty;
+
+            var index = path.LastIndexOf("/", StringComparison.Ordinal);
+            return index <= 0 ? string.Empty : path.Substring(0, index);
+        }
+        private string MakeEntityPath(string path)
+        {
+            var lastSlash = path.LastIndexOf('/');
+            if (lastSlash > 0)
+            {
+                var path1 = path.Substring(0, lastSlash);
+                var path2 = path.Substring(lastSlash + 1);
+                return string.Format("{0}('{1}')", path1, path2);
+            }
+            return string.Format("/('{0}')", path.TrimStart('/'));
         }
     }
 }
