@@ -45,7 +45,7 @@ namespace SnBenchmark
                 return input;
 
             var src = input.Substring(p0 + 2, p1 - p0 - 2);
-            var pathSetExpr = PathSetExpression.Parse(input.Substring(p0 + 2, p1 - p0 - 2), context.CurrentProfile.Name, PathSets);
+            var pathSetExpr = PathOperation.Parse(input.Substring(p0 + 2, p1 - p0 - 2), context.CurrentProfile.Name, PathSets);
 
             var path = pathSetExpr.Execute(context);
 

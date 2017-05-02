@@ -10,14 +10,14 @@ namespace SnBenchmark
     public enum PathSetOperation { First, Current, Next, Index };
     public enum PathSetTransform { Parent, ODataEntity }
 
-    internal class PathSetExpression
+    internal class PathOperation
     {
         internal PathSet PathSet { get; private set; }
         internal PathSetOperation Operation { get; private set; }
         internal int AbsoluteIndex { get; private set; }
         internal PathSetTransform[] TransformationSteps { get; private set; }
 
-        public static PathSetExpression Parse(string src, string profileName, List<PathSet> pathSets)
+        public static PathOperation Parse(string src, string profileName, List<PathSet> pathSets)
         {
             // Split source to segments. Minimum 2 segments are expected.
             var segments = src.Split('.');
@@ -66,7 +66,7 @@ namespace SnBenchmark
             }
 
             // Return with a new product.
-            return new PathSetExpression
+            return new PathOperation
             {
                 PathSet = pathSet,
                 Operation = operation,

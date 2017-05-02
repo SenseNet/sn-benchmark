@@ -63,7 +63,7 @@ namespace SnBenchmarkTest
             var src = string.Empty;
             try
             {
-                PathSetExpression.Parse(src, ProfileName0, pathSets);
+                PathOperation.Parse(src, ProfileName0, pathSets);
                 Assert.Fail("Exception was not thrown");
             }
             catch (ApplicationException)
@@ -78,7 +78,7 @@ namespace SnBenchmarkTest
             var src = "PathSet111.FIRST";
             try
             {
-                PathSetExpression.Parse(src, ProfileName0, pathSets);
+                PathOperation.Parse(src, ProfileName0, pathSets);
                 Assert.Fail("Exception was not thrown");
             }
             catch (ApplicationException)
@@ -91,7 +91,7 @@ namespace SnBenchmarkTest
             var pathSets = new List<PathSet> { new PathSet { Name = PathSet0, Paths = new string[0], ProfileName = ProfileName0 } };
 
             var src = $"{PathSet0.ToUpperInvariant()}.FIRST";
-            var pathSetExpr = PathSetExpression.Parse(src, ProfileName0, pathSets);
+            var pathSetExpr = PathOperation.Parse(src, ProfileName0, pathSets);
 
             Assert.AreEqual(PathSet0, pathSetExpr.PathSet.Name);
         }
@@ -105,7 +105,7 @@ namespace SnBenchmarkTest
             var src = ProfileName0;
             try
             {
-                PathSetExpression.Parse(src, ProfileName0, pathSets);
+                PathOperation.Parse(src, ProfileName0, pathSets);
                 Assert.Fail("Exception was not thrown");
             }
             catch (ApplicationException)
@@ -118,7 +118,7 @@ namespace SnBenchmarkTest
             var pathSets = new List<PathSet> { new PathSet { Name = PathSet0, Paths = new string[0], ProfileName = ProfileName0 } };
 
             var src = $"{PathSet0}.FIRST";
-            var pathSetExpr = PathSetExpression.Parse(src, ProfileName0, pathSets);
+            var pathSetExpr = PathOperation.Parse(src, ProfileName0, pathSets);
 
             Assert.AreEqual(PathSet0, pathSetExpr.PathSet.Name);
             Assert.AreEqual(PathSetOperation.First, pathSetExpr.Operation);
@@ -129,7 +129,7 @@ namespace SnBenchmarkTest
             var pathSets = new List<PathSet> { new PathSet { Name = PathSet0, Paths = new string[0], ProfileName = ProfileName0 } };
 
             var src = $"{PathSet0}.CURRENT";
-            var pathSetExpr = PathSetExpression.Parse(src, ProfileName0, pathSets);
+            var pathSetExpr = PathOperation.Parse(src, ProfileName0, pathSets);
 
             Assert.AreEqual(PathSet0, pathSetExpr.PathSet.Name);
             Assert.AreEqual(PathSetOperation.Current, pathSetExpr.Operation);
@@ -140,7 +140,7 @@ namespace SnBenchmarkTest
             var pathSets = new List<PathSet> { new PathSet { Name = PathSet0, Paths = new string[0], ProfileName = ProfileName0 } };
 
             var src = $"{PathSet0}.NEXT";
-            var pathSetExpr = PathSetExpression.Parse(src, ProfileName0, pathSets);
+            var pathSetExpr = PathOperation.Parse(src, ProfileName0, pathSets);
 
             Assert.AreEqual(PathSet0, pathSetExpr.PathSet.Name);
             Assert.AreEqual(PathSetOperation.Next, pathSetExpr.Operation);
@@ -152,7 +152,7 @@ namespace SnBenchmarkTest
             var pathSets = new List<PathSet> { new PathSet { Name = PathSet0, Paths = new string[0], ProfileName = ProfileName0 } };
 
             var src = $"{PathSet0}.42";
-            var pathSetExpr = PathSetExpression.Parse(src, ProfileName0, pathSets);
+            var pathSetExpr = PathOperation.Parse(src, ProfileName0, pathSets);
 
             Assert.AreEqual(PathSet0, pathSetExpr.PathSet.Name);
             Assert.AreEqual(PathSetOperation.Index, pathSetExpr.Operation);
@@ -167,7 +167,7 @@ namespace SnBenchmarkTest
             var src = $"{PathSet0}.-111";
             try
             {
-                var pathSetExpr = PathSetExpression.Parse(src, ProfileName0, pathSets);
+                var pathSetExpr = PathOperation.Parse(src, ProfileName0, pathSets);
                 Assert.Fail("Exception was not thrown");
             }
             catch (ApplicationException e)
@@ -182,7 +182,7 @@ namespace SnBenchmarkTest
             var src = $"{PathSet0}.{(long)42 + int.MaxValue}";
             try
             {
-                PathSetExpression.Parse(src, ProfileName0, pathSets);
+                PathOperation.Parse(src, ProfileName0, pathSets);
                 Assert.Fail("Exception was not thrown");
             }
             catch (ApplicationException e)
@@ -196,7 +196,7 @@ namespace SnBenchmarkTest
             var pathSets = new List<PathSet> { new PathSet { Name = PathSet0, Paths = new string[0], ProfileName = ProfileName0 } };
 
             var src = $"{PathSet0}.current.ODATAENTITY";
-            var pathSetExpr = PathSetExpression.Parse(src, ProfileName0, pathSets);
+            var pathSetExpr = PathOperation.Parse(src, ProfileName0, pathSets);
 
             Assert.AreEqual(1, pathSetExpr.TransformationSteps.Length);
             Assert.AreEqual(PathSetTransform.ODataEntity, pathSetExpr.TransformationSteps[0]);
@@ -207,7 +207,7 @@ namespace SnBenchmarkTest
             var pathSets = new List<PathSet> { new PathSet { Name = PathSet0, Paths = new string[0], ProfileName = ProfileName0 } };
 
             var src = $"{PathSet0}.current.PARENT";
-            var pathSetExpr = PathSetExpression.Parse(src, ProfileName0, pathSets);
+            var pathSetExpr = PathOperation.Parse(src, ProfileName0, pathSets);
 
             Assert.AreEqual(1, pathSetExpr.TransformationSteps.Length);
             Assert.AreEqual(PathSetTransform.Parent, pathSetExpr.TransformationSteps[0]);
@@ -220,7 +220,7 @@ namespace SnBenchmarkTest
             var src = $"{PathSet0}.current.UNKNOWN";
             try
             {
-                PathSetExpression.Parse(src, ProfileName0, pathSets);
+                PathOperation.Parse(src, ProfileName0, pathSets);
                 Assert.Fail("Exception was not thrown");
             }
             catch (ApplicationException)
@@ -233,7 +233,7 @@ namespace SnBenchmarkTest
             var pathSets = new List<PathSet> { new PathSet { Name = PathSet0, Paths = new string[0], ProfileName = ProfileName0 } };
 
             var src = $"{PathSet0}.current.PARENT.PARENT.ODATAENTITY";
-            var pathSetExpr = PathSetExpression.Parse(src, ProfileName0, pathSets);
+            var pathSetExpr = PathOperation.Parse(src, ProfileName0, pathSets);
 
             Assert.AreEqual(3, pathSetExpr.TransformationSteps.Length);
             Assert.AreEqual(PathSetTransform.Parent, pathSetExpr.TransformationSteps[0]);
@@ -246,7 +246,7 @@ namespace SnBenchmarkTest
             var pathSets = new List<PathSet> { new PathSet { Name = PathSet0, Paths = new string[0], ProfileName = ProfileName0 } };
 
             var src = $"{PathSet0}.current.PARENT.PARENT.PARENT";
-            var pathSetExpr = PathSetExpression.Parse(src, ProfileName0, pathSets);
+            var pathSetExpr = PathOperation.Parse(src, ProfileName0, pathSets);
 
             Assert.AreEqual(3, pathSetExpr.TransformationSteps.Length);
             Assert.AreEqual(PathSetTransform.Parent, pathSetExpr.TransformationSteps[0]);
@@ -261,7 +261,7 @@ namespace SnBenchmarkTest
             var src = $"{PathSet0}.current.PARENT.PARENT.WRONG";
             try
             {
-                PathSetExpression.Parse(src, ProfileName0, pathSets);
+                PathOperation.Parse(src, ProfileName0, pathSets);
                 Assert.Fail("Exception was not thrown");
             }
             catch (ApplicationException)
@@ -276,7 +276,7 @@ namespace SnBenchmarkTest
             var src = $"{PathSet0}.current.PARENT.WRONG.PARENT";
             try
             {
-                PathSetExpression.Parse(src, ProfileName0, pathSets);
+                PathOperation.Parse(src, ProfileName0, pathSets);
                 Assert.Fail("Exception was not thrown");
             }
             catch (ApplicationException)
