@@ -60,6 +60,12 @@ namespace SnBenchmark.Parser
                 return;
             }
 
+            if (trimmed.StartsWith(Token.PathSet))
+            {
+                CurrentToken = new Token { Type = TokenType.PathSet, Value = trimmed.Substring(Token.PathSet.Length).TrimStart() };
+                return;
+            }
+
             CurrentToken = new Token { Type = TokenType.Unparsed, Value = line.Substring(Token.Data.Length) };
         }
     }

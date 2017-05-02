@@ -7,39 +7,39 @@ namespace SnBenchmark.Expression
     {
         public const string NormalSpeed = "NORMAL";
 
-        private readonly string _httpMethod;
-        private readonly string _url;
-        private readonly string _requestData;
-        private readonly string _speed;
+        internal string HttpMethod { get; }
+        internal string Url { get; }
+        internal string RequestData { get; }
+        internal string Speed { get; }
 
         public RequestExpression(string url, string httpMethod, string requestData, string speed)
         {
-            _httpMethod = httpMethod ?? "GET";
-            _url = url;
-            _requestData = requestData;
-            _speed = speed;
+            HttpMethod = httpMethod ?? "GET";
+            Url = url;
+            RequestData = requestData;
+            Speed = speed;
         }
 
         internal override BenchmarkActionExpression Clone()
         {
-            return new RequestExpression(_url, _httpMethod, _requestData, _speed);
+            return new RequestExpression(Url, HttpMethod, RequestData, Speed);
         }
         internal override async Task ExecuteAsync(IExecutionContext context, string actionId)
         {
             var server = ClientContext.Current.RandomServer;
-            var url = server.Url + context.ReplaceTemplates(_url);
+            var url = server.Url + context.ReplaceTemplates(Url);
 
-            var requestData = _httpMethod == "GET" ? null : _requestData;
+            var requestData = HttpMethod == "GET" ? null : RequestData;
             if (requestData != null)
                 requestData = context.ReplaceTemplates(requestData);
 
-            var response = await Web.RequestAsync(actionId, server, _speed, _httpMethod, url, requestData);
+            var response = await Web.RequestAsync(actionId, server, Speed, HttpMethod, url, requestData);
 
             context.SetVariable("@Response", response);
         }
         public override string ToString()
         {
-            return _httpMethod + ": " + _url;
+            return HttpMethod + ": " + Url;
         }
     }
 }
