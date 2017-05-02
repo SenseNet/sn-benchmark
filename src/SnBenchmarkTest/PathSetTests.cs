@@ -53,7 +53,7 @@ namespace SnBenchmarkTest
             Assert.AreEqual("0,1,2,3,4", indexStringB);
         }
 
-        #region PathSetExpression parsing
+        #region Parsing tests
 
         [TestMethod]
         public void PathSet_ExprName_Missing()
@@ -286,6 +286,8 @@ namespace SnBenchmarkTest
 
         #endregion
 
+        #region Execution tests
+
         [TestMethod]
         public void PathSet_ExprExec_Current()
         {
@@ -433,6 +435,6 @@ namespace SnBenchmarkTest
                 Assert.AreEqual(expectedUrls[i], actualUrls[i]);
         }
 
-
+        #endregion
     }
 }

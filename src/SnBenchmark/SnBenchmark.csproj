@@ -63,11 +63,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BuiltInWebAccess.cs" />
     <Compile Include="Expression\BenchmarkActionExpression.cs" />
     <Compile Include="Expression\IExecutionContext.cs" />
     <Compile Include="Expression\RequestExpression.cs" />
     <Compile Include="Expression\VariableExpression.cs" />
     <Compile Include="Expression\WaitExpression.cs" />
+    <Compile Include="IWebAccess.cs" />
     <Compile Include="Parser\Lexer.cs" />
     <Compile Include="Parser\Token.cs" />
     <Compile Include="PathSet.cs" />
