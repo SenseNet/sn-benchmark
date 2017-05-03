@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using SenseNet.Client;
@@ -24,6 +23,7 @@ namespace SnBenchmark
         private int _activeRequests;
         public int ActiveRequests => _activeRequests;
 
+        // ReSharper disable once UnusedAutoPropertyAccessor.Local
         private double AverageResponseTimeInSec { get; set; }
 
         private readonly object _responseTimesSync = new object();

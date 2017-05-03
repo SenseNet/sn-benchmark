@@ -1,9 +1,6 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SnBenchmark;
 using SnBenchmark.Expression;
@@ -167,10 +164,10 @@ namespace SnBenchmarkTest
             var src = $"{PathSet0}.-111";
             try
             {
-                var pathSetExpr = PathOperation.Parse(src, ProfileName0, pathSets);
+                PathOperation.Parse(src, ProfileName0, pathSets);
                 Assert.Fail("Exception was not thrown");
             }
-            catch (ApplicationException e)
+            catch (ApplicationException)
             {
             }
         }
@@ -185,7 +182,7 @@ namespace SnBenchmarkTest
                 PathOperation.Parse(src, ProfileName0, pathSets);
                 Assert.Fail("Exception was not thrown");
             }
-            catch (ApplicationException e)
+            catch (ApplicationException)
             {
             }
         }

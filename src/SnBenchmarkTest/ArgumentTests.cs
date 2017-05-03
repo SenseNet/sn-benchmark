@@ -142,11 +142,11 @@ namespace SnBenchmarkTest
             {
                 Args_Profile_TheTest(testCase, null, null, null);
             }
-            catch (ArgumentNullException ae)
+            catch (ArgumentNullException)
             {
                 return true;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return false;
             }
