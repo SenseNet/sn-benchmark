@@ -27,10 +27,16 @@ namespace SnBenchmark
             string requestBody);
 
         /// <summary>
+        /// Returns with an enumerable path set according to the specified content query.
+        /// </summary>
+        Task<IEnumerable<string>> QueryPathSetAsync(string query);
+
+        /// <summary>
         /// At the end of a period this method resets time values and returns the average
         /// values collected in that period for all speed categories.
         /// </summary>
         Dictionary<string, double> GetPeriodDataAndReset();
 
+        string[] GetRequestLog();
     }
 }

@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using SenseNet.Client;
 
 namespace SnBenchmark
 {
@@ -176,6 +177,13 @@ namespace SnBenchmark
         private Dictionary<string, object> GetScope(string name)
         {
             return name[1] == VariableExpression.VariableStart ? GlobalScope : _localScope;
+        }
+
+        internal static void GetPathSets(Profile profile, out IEnumerable<PathSetExpression> pathSetExpressions)
+        {
+            pathSetExpressions = profile.Actions.Where(a => a is PathSetExpression).Cast<PathSetExpression>().ToArray();
+            foreach (var pathSetExpr in pathSetExpressions)
+                profile.Actions.Remove(pathSetExpr);
         }
     }
 }

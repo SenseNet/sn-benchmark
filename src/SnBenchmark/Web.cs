@@ -52,6 +52,14 @@ namespace SnBenchmark
         }
 
         /// <summary>
+        /// Returns with an enumerable path set according to the specified content query.
+        /// </summary>
+        public static async Task<IEnumerable<string>> QueryPathSetAsync(string query)
+        {
+            return await WebAccess.QueryPathSetAsync(query);
+        }
+
+        /// <summary>
         /// At the end of a period this method resets time values and returns the average
         /// values collected in that period for all speed categories.
         /// </summary>

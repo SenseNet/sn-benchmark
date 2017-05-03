@@ -29,5 +29,15 @@ namespace SnBenchmarkTest
         {
             throw new NotImplementedException();
         }
+
+        public Task<IEnumerable<string>> QueryPathSetAsync(string query)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string[] GetRequestLog()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SenseNet.Client;
 using SnBenchmark.Expression;
 
 namespace SnBenchmark
@@ -19,8 +20,8 @@ namespace SnBenchmark
 
         public static PathSet Create(string profileName, string name, string definition)
         {
-            //UNDONE: implement PathSet.Create()
-            throw new NotImplementedException();
+            var result = Web.QueryPathSetAsync(definition).Result;
+            return Create(profileName, name, result.ToArray());
         }
         internal static PathSet Create(string profileName, string name, string[] paths)
         {

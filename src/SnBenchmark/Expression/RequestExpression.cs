@@ -27,7 +27,7 @@ namespace SnBenchmark.Expression
         internal override async Task ExecuteAsync(IExecutionContext context, string actionId)
         {
             var server = ClientContext.Current.RandomServer;
-            var url = server.Url + context.ReplaceTemplates(Url);
+            var url = server.Url + context.ReplaceTemplates(PathSet.ResolveUrl(Url, context));
 
             var requestData = HttpMethod == "GET" ? null : RequestData;
             if (requestData != null)

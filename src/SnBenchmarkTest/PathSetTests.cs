@@ -492,5 +492,59 @@ namespace SnBenchmarkTest
         }
 
         #endregion
+
+        [TestMethod]
+        public void PathSet_Initialization()
+        {
+            var speedItems = new List<string> { RequestExpression.NormalSpeed };
+            var src =
+                "PATHSET: BigFiles Size:>236000 AND TypeIs:File AND InTree:'/Root/Benchmark/Files' .AUTOFILTERS:OFF" + Environment.NewLine +
+                "PATHSET: SmallFiles Size:<2360 AND TypeIs:File AND InTree:'/Root/Benchmark/Files' .AUTOFILTERS:OFF" + Environment.NewLine +
+                "WAIT: 10042";
+            var webAccess = new TestWebAccess();
+            Web.WebAccess = webAccess;
+
+            var profile = Profile.Parse("Profile0", src, speedItems);
+            IEnumerable<PathSetExpression> psExprs;
+            Profile.GetPathSets(profile, out psExprs);
+
+            // test#1: PathSetExpressions must be removed from the profile's action list
+            var actions = profile.Actions;
+            Assert.AreEqual(1, actions.Count);
+            var action = actions[0] as WaitExpression;
+            Assert.IsNotNull(action);
+            Assert.AreEqual(10042, action.Milliseconds);
+
+            // test#2: Separated path set list contains two items
+            var pathSetExpressions = psExprs.ToArray();
+            Assert.AreEqual(2, pathSetExpressions.Length);
+            Assert.AreEqual("BigFiles", pathSetExpressions[0].Name);
+            Assert.AreEqual("SmallFiles", pathSetExpressions[1].Name);
+        }
+
+        [TestMethod]
+        public void PathSet_ParsePaths()
+        {
+            var src = @"{
+    ""d"": {
+        ""__count"": 10,
+        ""results"": [
+            {
+                ""Path"": ""/Root/Benchmark/doc1.doc""
+            },
+            {
+                ""Path"": ""/Root/Benchmark/doc2.doc""
+            },
+            {
+                ""Path"": ""/Root/Benchmark/doc3.doc""
+            },
+        ]
+    }
+}";
+            var result = new BuiltInWebAccess().ParsePaths(src);
+
+            var expected = string.Join(", ", result);
+            Assert.AreEqual("/Root/Benchmark/doc1.doc, /Root/Benchmark/doc2.doc, /Root/Benchmark/doc3.doc", expected);
+        }
     }
 }

@@ -19,12 +19,12 @@ namespace SnBenchmark.Expression
 
         internal override BenchmarkActionExpression Clone()
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
 
         internal override Task ExecuteAsync(IExecutionContext context, string actionId)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException();
         }
     }
 }
