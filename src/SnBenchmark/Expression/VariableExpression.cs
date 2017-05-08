@@ -24,6 +24,11 @@ namespace SnBenchmark.Expression
             return new VariableExpression(Name, ObjectName, PropertyPath);
         }
 
+        internal override void Test(IExecutionContext context, string actionId, string profileResponsesDirectory)
+        {
+            // do nothing
+        }
+
         internal override Task ExecuteAsync(IExecutionContext context, string actionId)
         {
             var @object = context.GetVariable(ObjectName);

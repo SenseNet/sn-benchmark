@@ -200,6 +200,10 @@ namespace SnBenchmark
         }
         private string _outputFile;
         public string OutputFile => _outputFile ?? (_outputFile = ParseOutputFile(GetDefaultOutputFile()));
+        public string ResponsesDirectoryPath => GetResponsesDirectoryPath(OutputFile);
+
+        [CommandLineArgument(name: "TestOnly", required: false, aliases: "T,Test", helpText: "Plays the profiles once and saves their responses.")]
+        public bool TestOnly { get; set; }
 
         private static string ParseOutputFile(string fileName)
         {
@@ -228,6 +232,10 @@ namespace SnBenchmark
                 throw new ArgumentException("Output definition cannot contain the '*' character more than once.");
             var dateTimeString = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss", CultureInfo.InvariantCulture);
             return fileName.Replace("*", dateTimeString);
+        }
+        private static string GetResponsesDirectoryPath(string outputFile)
+        {
+            return Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile));
         }
     }
 }

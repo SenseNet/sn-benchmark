@@ -19,6 +19,11 @@ namespace SnBenchmark.Expression
             throw new NotSupportedException();
         }
 
+        internal override void Test(IExecutionContext context, string actionId, string profileResponsesDirectory)
+        {
+            // do nothing
+        }
+
         internal override Task ExecuteAsync(IExecutionContext context, string actionId)
         {
             throw new NotSupportedException();

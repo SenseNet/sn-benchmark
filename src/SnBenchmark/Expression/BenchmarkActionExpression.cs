@@ -7,5 +7,7 @@ namespace SnBenchmark.Expression
         internal abstract BenchmarkActionExpression Clone();
 
         internal abstract Task ExecuteAsync(IExecutionContext context, string actionId);
+
+        internal abstract void Test(IExecutionContext context, string actionId, string profileResponsesDirectory);
     }
 }

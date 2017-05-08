@@ -79,18 +79,43 @@ namespace SnBenchmark
                 {
                     Console.Write($"  Getting paths: {profileItem.Key}.{ pathSetExpression.Name} ... ");
                     var pathSet = PathSet.Create(profileItem.Key, pathSetExpression.Name, pathSetExpression.Definition);
+                    if (_configuration.TestOnly)
+                        SavePathSet(pathSet);
                     Console.WriteLine($"Ok. Count: {pathSet.Paths.Length}");
                 }
             }
 
             Console.WriteLine("Start.");
 
-            Run(initial, growing).Wait();
+            EnsureOutputFile(_configuration);
+            if (_configuration.TestOnly)
+                TestProfiles(initial);
+            else
+                Run(initial, growing).Wait();
 
             WriteRequestLog();
 
             Console.WriteLine("Finished.");
         }
+
+        private static void SavePathSet(PathSet pathSet)
+        {
+            var profileDir = EnsureProfileResponsesDirectory(pathSet.ProfileName);
+            var pathSetPath = Path.Combine(profileDir, $"{pathSet.Name}.pathset");
+            using (var writer = new StreamWriter(pathSetPath))
+                foreach (var path in pathSet.Paths)
+                    writer.WriteLine(path);
+        }
+
+        private static string EnsureProfileResponsesDirectory(string profileName)
+        {
+            var dir = _configuration.ResponsesDirectoryPath;
+            var profileDir = Path.Combine(dir, profileName);
+            if (!Directory.Exists(profileDir))
+                Directory.CreateDirectory(profileDir);
+            return profileDir;
+        }
+
         private static List<Profile> InitializeProfiles(Dictionary<string, int> config,
             out IDictionary<string, PathSetExpression[]> pathSetExpressions)
         {
@@ -191,8 +216,6 @@ namespace SnBenchmark
 
             _isInWarmup = true;
 
-            EnsureOutputFile(_configuration);
-
             WriteColumnHeaders(_speedItems);
 
             // begin with starting the configured number of initial profiles as a warmup
@@ -252,6 +275,7 @@ namespace SnBenchmark
             Console.WriteLine();
         }
 
+
         private static async Task ShutdownProfiles()
         {
             foreach (var runningProfile in RunningProfiles)
@@ -310,6 +334,11 @@ namespace SnBenchmark
                 newProfile.ExecuteAsync();
 #pragma warning restore CS4014
             }
+        }
+        private static void TestProfiles(List<Profile> profiles)
+        {
+            foreach (var profile in profiles)
+                profile.Test(EnsureProfileResponsesDirectory(profile.Name));
         }
 
         private static Dictionary<string, double> _periodData;

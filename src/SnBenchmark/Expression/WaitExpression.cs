@@ -14,6 +14,12 @@ namespace SnBenchmark.Expression
         {
             return new WaitExpression(Milliseconds);
         }
+
+        internal override void Test(IExecutionContext context, string actionId, string profileResponsesDirectory)
+        {
+            // do nothing
+        }
+
         internal override async Task ExecuteAsync(IExecutionContext context, string actionId)
         {
             var ms = Milliseconds;

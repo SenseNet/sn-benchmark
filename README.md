@@ -220,6 +220,72 @@ If the line starts with a semicolon character (;) the line will be skipped.
 ```
 There is only line comment, it is not possible to write an inline comment.
 
+### PATHSET
+
+Path set is a ..... .... .... .... .... .... .... .... .... .... .... .... .... 
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+
+#### Declaration
+
+The best place of the path set declarations at the top of the profile file but this is not mandatory. The declaration has three part:
+1. **Keyword**: this is the '*PATHSET:*'.
+2. **Name**: One word after the keyword separated by a space.
+3. **Definition**: this is a valid content query (in CQL).
+
+It is strongly recommended to use AND / OR logical operators in the content query instead of usual Lucene occurences (enpty / + / -) because the definition query will be URL encoded and the '+' character means space (0x20) in the URL.
+
+#### Usage
+
+asdf
+1. Start: Two hashmark ('##').
+2. Name: Reference name of the path set.
+3. Addressing: Number or keyword that defines the profile's index and returns with the item that placed on the indexed position of the referenced set. The valid values:
+   - **'First'**: Sets the profile's index to de original value.
+   - **'Current'**: Stays on the current position.
+   - **'Next'**: Increment the position 
+   - **Direct index**: A non-negative integer number that ignores the profile's index.
+4. Transformation:
+5. Finish:  Two hashmark ('##').
+
+***Note**: the profile's index cannot exceed the path set size because every index operation is followed by a normalization (index modulo path set count).*
+
+
+
+
+
+The following example simulates the tipical usage:
+```text
+; Define 100 large file
+PATHSET: BigFiles Size:>236000 AND TypeIs:File AND InTree:'/Root/Benchmark/Files' .TOP:100 .AUTOFILTERS:OFF
+
+; Simulate browsing step #1: File list
+REQ: GET /odata.svc##BigFiles.current.parent##?metadata=no&$select=Name,DisplayName
+WAIT: 2000
+
+; Simulate browsing step #1: File list
+REQ: GET /odata.svc##BigFiles.current.odataentity##?$select=Id,Path,Size,DisplayName
+WAIT: 2000
+
+; Download the file
+REQ: GET ##BigFiles.current##
+SPEED: Slow
+WAIT: 2000
+```
+
 ### WAIT
 The profile execution will be suspended for a time. Parameter value is defined in milliseconds.
 ```text

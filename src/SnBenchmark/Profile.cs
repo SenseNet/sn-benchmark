@@ -105,6 +105,21 @@ namespace SnBenchmark
             }
             Program.StoppedProfiles++;
         }
+
+        internal void Test(string profileResponsesDirectory)
+        {
+            for (var i = 0; i < this.Actions.Count; i++)
+            {
+                try
+                {
+                    this.Actions[i].Test(this, "P" + this.Id + "A" + i + "x", profileResponsesDirectory);
+                }
+                catch (Exception e)
+                {
+                    Program.AddError(e, this, i, this.Actions[i]);
+                }
+            }
+        }
         internal void Stop()
         {
             _running = false;
