@@ -27,9 +27,14 @@ namespace SnBenchmark
             {
                 var result = ArgumentParser.Parse(args, _configuration);
                 if (result.IsHelp)
+                {
                     Console.WriteLine(result.GetHelpText());
+                }
                 else
+                {
+                    Console.WriteLine(result.GetAppNameAndVersion());
                     Run();
+                }
             }
             catch (ParsingException e)
             {
@@ -58,12 +63,36 @@ namespace SnBenchmark
                 .ToArray()
             );
 
-            var initial = InitializeProfiles(_configuration.InitialProfiles);
-            var growing = InitializeProfiles(_configuration.GrowingProfiles);
+            Console.WriteLine("Initializing profiles.");
+
+            IDictionary<string, PathSetExpression[]> pathSetExpressionsByProfiles;
+            IDictionary<string, PathSetExpression[]> psExprs2;
+            var initial = InitializeProfiles(_configuration.InitialProfiles, out pathSetExpressionsByProfiles);
+            var growing = InitializeProfiles(_configuration.GrowingProfiles, out psExprs2);
+
+            Console.WriteLine("Ok.");
+            Console.WriteLine("Initializing path sets.");
+
+            foreach (var profileItem in pathSetExpressionsByProfiles)
+            {
+                foreach (var pathSetExpression in profileItem.Value)
+                {
+                    Console.Write($"  Getting paths: {profileItem.Key}.{ pathSetExpression.Name} ... ");
+                    var pathSet = PathSet.Create(profileItem.Key, pathSetExpression.Name, pathSetExpression.Definition);
+                    Console.WriteLine($"Ok. Count: {pathSet.Paths.Length}");
+                }
+            }
+
+            Console.WriteLine("Start.");
 
             Run(initial, growing).Wait();
+
+            WriteRequestLog();
+
+            Console.WriteLine("Finished.");
         }
-        private static List<Profile> InitializeProfiles(Dictionary<string, int> config)
+        private static List<Profile> InitializeProfiles(Dictionary<string, int> config,
+            out IDictionary<string, PathSetExpression[]> pathSetExpressions)
         {
             var profilesDirectory = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Profiles"));
             if(!Directory.Exists(profilesDirectory))
@@ -73,6 +102,7 @@ namespace SnBenchmark
 
             var profiles = new List<Profile>();
             var speedItems = new List<string> { RequestExpression.NormalSpeed };
+            pathSetExpressions = new Dictionary<string, PathSetExpression[]>();
 
             // Iterate through all configured profile types and add the requested
             // number of initial profile objects of that profile type to the list.
@@ -83,6 +113,10 @@ namespace SnBenchmark
 
                 var src = LoadProfile(name, profilesDirectory);
                 var profile = Profile.Parse(name, src, speedItems);
+
+                IEnumerable<PathSetExpression> psExpr;
+                Profile.GetPathSets(profile, out psExpr);
+                pathSetExpressions.Add(profile.Name, psExpr.ToArray());
 
                 // add a configured number of initial profiles of this type to the list
                 for (var i = 0; i < count; i++)
@@ -170,14 +204,37 @@ namespace SnBenchmark
             var boundaryConditionHaveBeenFulfilled = false;
             _isInWarmup = false;
 
+            Console.WriteLine();
+            Console.Write("Press <x> to exit");
+
             // start more profiles periodically, while the terminating conditions are not fulfilled
+            var exit = false;
             while (!boundaryConditionHaveBeenFulfilled)
             {
                 AddAndStartProfiles(growingProfiles);
                 Monitor("---- GROWING ");
-                await Task.Delay(_configuration.GrowingTime * 1000);
+
+                for (int i = 0; i < 100; i++)
+                {
+                    if (Console.KeyAvailable)
+                    {
+                        var key = Console.ReadKey(true);
+                        if (key.KeyChar == 'x')
+                        {
+                            exit = true;
+                            break;
+                        }
+                    }
+                    await Task.Delay(_configuration.GrowingTime * 10);
+                }
+                if (exit)
+                    break;
+
                 boundaryConditionHaveBeenFulfilled = CheckBoundaryConditions(_limits);
             }
+
+            if(exit)
+                Console.WriteLine("Interrupted with EXIT key.");
 
             var benchmarkResult = "BENCHMARK RESULT: " + (_lastBenchmarkResult ?? _benchmarkResult) + " Total errors: " + (_errorCountInWarmup + _errorCount);
             if (!_configuration.Verbose)
@@ -399,6 +456,17 @@ namespace SnBenchmark
                 using (var writer = new StreamWriter(_errorFile, true))
                     writer.WriteLine(ErrorFormat, ++_loggedErrorCount, _isInWarmup ? "(WARMUP)" : "", actionIndex, profile.Name,
                         profile.Id, action, e.Message, serverTrace ?? string.Empty);
+            }
+        }
+
+        private static void WriteRequestLog()
+        {
+            var file = _outputFile + ".requests.log";
+            var lines = Web.WebAccess.GetRequestLog();
+            using (var writer = new StreamWriter(file, false))
+            {
+                for (int i = 0; i < lines.Length; i++)
+                    writer.WriteLine($"{i:#####}\t{lines[i]}");
             }
         }
     }

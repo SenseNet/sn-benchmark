@@ -4,26 +4,26 @@ namespace SnBenchmark.Expression
 {
     internal class WaitExpression : BenchmarkActionExpression
     {
-        private readonly int _milliseconds;
+        internal int Milliseconds { get; }
 
         public WaitExpression(int milliseconds)
         {
-            _milliseconds = milliseconds;
+            Milliseconds = milliseconds;
         }
         internal override BenchmarkActionExpression Clone()
         {
-            return new WaitExpression(_milliseconds);
+            return new WaitExpression(Milliseconds);
         }
         internal override async Task ExecuteAsync(IExecutionContext context, string actionId)
         {
-            var ms = _milliseconds;
+            var ms = Milliseconds;
             if (ms > 5)
                 ms = RNG.Get(ms - ms / 4, ms + ms / 2);
             await Task.Delay(ms);
         }
         public override string ToString()
         {
-            return "WAIT: " + _milliseconds;
+            return "WAIT: " + Milliseconds;
         }
     }
 }

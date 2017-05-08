@@ -41,6 +41,7 @@ namespace SnBenchmark.Parser
                     case TokenType.Request: parsedAction = ParseRequest(token); break;
                     case TokenType.Wait: parsedAction = ParseWait(token); break;
                     case TokenType.Variable: parsedAction = ParseVariable(token); break;
+                    case TokenType.PathSet: parsedAction = ParsePathSet(token); break;
                     case TokenType.Unparsed: throw new ApplicationException("Unparsed line: " + token.Value);
                     case TokenType.Eof: return _actions;
                     case TokenType.Data:
@@ -97,6 +98,21 @@ namespace SnBenchmark.Parser
             _lexer.NextToken();
 
             return new VariableExpression(name, objectName, propertyPath);
+        }
+        private BenchmarkActionExpression ParsePathSet(Token token)
+        {
+            var src = token.Value;
+
+            var p = src.IndexOf(' ');
+            if (p < 0)
+                throw new ApplicationException("Syntax error: must starts with a name followed by a definition.");
+
+            var name = src.Substring(0, p);
+            var definition = src.Substring(p);
+
+            _lexer.NextToken();
+
+            return new PathSetExpression(name.Trim(), definition.Trim());
         }
 
         private BenchmarkActionExpression ParseRequest(Token token)
