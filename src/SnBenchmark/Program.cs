@@ -19,6 +19,12 @@ namespace SnBenchmark
 
         private static void Main(string[] args)
         {
+//UNDONE: DELETE HACK
+#if DEBUG
+args = new[] {"-PROFILE:uploader:1+1", "-SITE:http://localhost", "-USR:admin", "-PWD:admin", "-TEST"};
+#endif
+
+
             ServicePointManager.DefaultConnectionLimit = 300;
 
             _configuration = new Configuration();
@@ -330,7 +336,7 @@ namespace SnBenchmark
                 RunningProfiles.Add(newProfile);
 
                 // start executing the profile but do not wait for it to complete
-#pragma warning disable CS4014 
+#pragma warning disable CS4014
                 newProfile.ExecuteAsync();
 #pragma warning restore CS4014
             }
@@ -466,7 +472,7 @@ namespace SnBenchmark
         private static string _errorFile;
         private static int _loggedErrorCount;
         private static readonly string ErrorFormat = "ERROR#{0}{1} in {2}. action of {3} #{4}: {5}" + Environment.NewLine
-            + "{6}" + Environment.NewLine + "{7}" + Environment.NewLine;
+            + "{6}" + Environment.NewLine;
         private static void WriteErrorToLog(Exception e, Profile profile, int actionIndex, BenchmarkActionExpression action)
         {
             lock (ErrorFileSync)
@@ -479,13 +485,15 @@ namespace SnBenchmark
                         wr.WriteLine();
                 }
 
-                var clienEx = e as ClientException;
-                var serverTrace = clienEx?.ErrorData?.InnerError?.Trace;
-
                 using (var writer = new StreamWriter(_errorFile, true))
                     writer.WriteLine(ErrorFormat, ++_loggedErrorCount, _isInWarmup ? "(WARMUP)" : "", actionIndex, profile.Name,
-                        profile.Id, action, e.Message, serverTrace ?? string.Empty);
+                        profile.Id, action, GetExceptionInfo(e));
             }
+        }
+
+        private static string GetExceptionInfo(Exception exception)
+        {
+            return SenseNet.Tools.Utility.CollectExceptionMessages(exception);
         }
 
         private static void WriteRequestLog()
