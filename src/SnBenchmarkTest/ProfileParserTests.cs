@@ -22,6 +22,8 @@ namespace SnBenchmarkTest
 
             Assert.AreEqual(TokenType.Comment, lexer.CurrentToken.Type);
             Assert.AreEqual(value, lexer.CurrentToken.Value);
+            
+            Assert.AreEqual($"Comment: {value}", lexer.CurrentToken.ToString());
         }
         [TestMethod]
         public void Profile_TokenizeRequest()
@@ -94,6 +96,18 @@ namespace SnBenchmarkTest
 
             Assert.AreEqual(TokenType.PathSet, lexer.CurrentToken.Type);
             Assert.AreEqual(value, lexer.CurrentToken.Value);
+        }
+        [TestMethod]
+        public void Profile_TokenizeUnparsed()
+        {
+
+            var src = $"Unparsed unchanged text";
+            var lexer = new Lexer(src);
+
+            lexer.NextToken();
+
+            Assert.AreEqual(TokenType.Unparsed, lexer.CurrentToken.Type);
+            Assert.AreEqual(src, lexer.CurrentToken.Value);
         }
 
         #endregion
@@ -173,6 +187,32 @@ namespace SnBenchmarkTest
             Assert.AreEqual("NORMAL", reqExp.Speed);
         }
         [TestMethod]
+        public void Profile_ParseRequestData_MultiLine()
+        {
+            var method = "POST";
+            var url = "/odata.svc/Root/Benchmark?metadata=no&$select=Name";
+            var reqValue = $"{method} {url}";
+            var dataValue = @"models=[{""__ContentType"":""Memo"",""Description"":""asdfqwer""}]";
+            var speedItems = new List<string> { RequestExpression.NormalSpeed };
+            var src = $@"REQ: {reqValue}" + Environment.NewLine
+                      + @"DATA: models=[{" + Environment.NewLine
+                      + @"    ""__ContentType"":""Memo""," + Environment.NewLine
+                      + @"    ""Description"":""asdfqwer""" + Environment.NewLine
+                      + @"}]" + Environment.NewLine
+                      + @"SPEED: Medium" + Environment.NewLine;
+            var parser = new ProfileParser(src, speedItems);
+
+            var result = parser.Parse();
+
+            Assert.AreEqual(1, result.Count);
+            Assert.IsTrue(result[0] is RequestExpression);
+            var reqExp = (RequestExpression)result[0];
+            Assert.AreEqual(method, reqExp.HttpMethod);
+            Assert.AreEqual(url, reqExp.Url);
+            Assert.AreEqual(dataValue, reqExp.RequestData.Replace(Environment.NewLine, "").Replace(" ", ""));
+            Assert.AreEqual("MEDIUM", reqExp.Speed);
+        }
+        [TestMethod]
         public void Profile_ParseRequestSpeed()
         {
             var method = "POST";
@@ -195,6 +235,26 @@ namespace SnBenchmarkTest
             Assert.AreEqual(url, reqExp.Url);
             Assert.AreEqual(dataValue, reqExp.RequestData);
             Assert.AreEqual("SLOW", reqExp.Speed);
+        }
+        [TestMethod]
+        public void Profile_ParseRequestSpeedEmpty()
+        {
+            var method = "GET";
+            var url = "/odata.svc/Root/Benchmark?metadata=no&$select=Name";
+            var reqValue = $"{method} {url}";
+            var speedItems = new List<string> { RequestExpression.NormalSpeed };
+            var src = $@"REQ: {reqValue}" + Environment.NewLine
+                      + $@"SPEED:";
+            var parser = new ProfileParser(src, speedItems);
+
+            var result = parser.Parse();
+
+            Assert.AreEqual(1, result.Count);
+            Assert.IsTrue(result[0] is RequestExpression);
+            var reqExp = (RequestExpression)result[0];
+            Assert.AreEqual(method, reqExp.HttpMethod);
+            Assert.AreEqual(url, reqExp.Url);
+            Assert.AreEqual("NORMAL", reqExp.Speed);
         }
         [TestMethod]
         public void Profile_ParseVariable()

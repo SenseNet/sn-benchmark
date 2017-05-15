@@ -66,7 +66,7 @@ namespace SnBenchmark.Parser
                 return;
             }
 
-            CurrentToken = new Token { Type = TokenType.Unparsed, Value = line.Substring(Token.Data.Length) };
+            CurrentToken = new Token { Type = TokenType.Unparsed, Value = line };
         }
     }
 }
