@@ -10,14 +10,10 @@ namespace SnBenchmark.Expression
         {
             Milliseconds = milliseconds;
         }
+
         internal override BenchmarkActionExpression Clone()
         {
             return new WaitExpression(Milliseconds);
-        }
-
-        internal override void Test(IExecutionContext context, string actionId, string profileResponsesDirectory)
-        {
-            // do nothing
         }
 
         internal override async Task ExecuteAsync(IExecutionContext context, string actionId)
@@ -27,6 +23,12 @@ namespace SnBenchmark.Expression
                 ms = RNG.Get(ms - ms / 4, ms + ms / 2);
             await Task.Delay(ms);
         }
+
+        internal override void Test(IExecutionContext context, string actionId, string profileResponsesDirectory)
+        {
+            // do nothing
+        }
+
         public override string ToString()
         {
             return "WAIT: " + Milliseconds;

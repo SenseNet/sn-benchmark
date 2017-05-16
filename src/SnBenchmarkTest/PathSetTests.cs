@@ -12,6 +12,7 @@ namespace SnBenchmarkTest
     {
         private const string PathSet0 = "PathSet0";
         private const string ProfileName0 = "Profile0";
+        private const string ProfileLocation = "c:\\fakelocation";
 
         [TestInitialize]
         public void InitializeTest()
@@ -23,8 +24,8 @@ namespace SnBenchmarkTest
         [TestMethod]
         public void PathSet_ProfileIdAndIndex()
         {
-            var profileA0 = new Profile("ProfileA", new List<BenchmarkActionExpression>());
-            var profileB0 = new Profile("ProfileB", new List<BenchmarkActionExpression>());
+            var profileA0 = new Profile("ProfileA", ProfileLocation, new List<BenchmarkActionExpression>());
+            var profileB0 = new Profile("ProfileB", ProfileLocation, new List<BenchmarkActionExpression>());
             var profileA1 = profileA0.Clone();
             var profileA2 = profileA0.Clone();
             var profileB1 = profileB0.Clone();
@@ -288,7 +289,7 @@ namespace SnBenchmarkTest
         [TestMethod]
         public void PathSet_ExprExec_Current()
         {
-            var profile0 = new Profile("Profile0", new List<BenchmarkActionExpression>());
+            var profile0 = new Profile("Profile0", ProfileLocation, new List<BenchmarkActionExpression>());
             PathSet.Create("Profile0", "PathSet0", new[] { "/Root/A/B/Path0", "/Root/A/B/Path1", "/Root/A/B/Path2" });
 
             var expectedUrl = "/OData.svc/Root/A/B/Path0?metadata=no";
@@ -301,7 +302,7 @@ namespace SnBenchmarkTest
         [TestMethod]
         public void PathSet_ExprExec_Next()
         {
-            var profile0 = new Profile("Profile0", new List<BenchmarkActionExpression>());
+            var profile0 = new Profile("Profile0", ProfileLocation, new List<BenchmarkActionExpression>());
             PathSet.Create("Profile0", "PathSet0", new[] { "/Root/A/B/Path0", "/Root/A/B/Path1", "/Root/A/B/Path2" });
 
             var expectedUrls = new []
@@ -329,7 +330,7 @@ namespace SnBenchmarkTest
         [TestMethod]
         public void PathSet_ExprExec_First()
         {
-            var profile0 = new Profile("Profile0", new List<BenchmarkActionExpression>());
+            var profile0 = new Profile("Profile0", ProfileLocation, new List<BenchmarkActionExpression>());
             PathSet.Create("Profile0", "PathSet0", new[] { "/Root/A/B/Path0", "/Root/A/B/Path1", "/Root/A/B/Path2", "/Root/A/B/Path3" });
 
             var expectedUrls = new[]
@@ -354,7 +355,7 @@ namespace SnBenchmarkTest
         [TestMethod]
         public void PathSet_ExprExec_Index4Index2FirstIndex3()
         {
-            var profile0 = new Profile("Profile0", new List<BenchmarkActionExpression>());
+            var profile0 = new Profile("Profile0", ProfileLocation, new List<BenchmarkActionExpression>());
             PathSet.Create("Profile0", "PathSet0", new[] { "/Root/A/B/Path0", "/Root/A/B/Path1", "/Root/A/B/Path2", "/Root/A/B/Path3", "/Root/A/B/Path4" });
 
             var expectedUrls = new[]
@@ -381,7 +382,7 @@ namespace SnBenchmarkTest
         [TestMethod]
         public void PathSet_ExprExec_MoreInstances()
         {
-            var profileA = new Profile("ProfileA", new List<BenchmarkActionExpression>());
+            var profileA = new Profile("ProfileA", ProfileLocation, new List<BenchmarkActionExpression>());
             PathSet.Create("ProfileA", "PathSet0",
                 new[] {"/Root/A/B/Path0", "/Root/A/B/Path1", "/Root/A/B/Path2", "/Root/A/B/Path3", "/Root/A/B/Path4"});
 
@@ -435,7 +436,7 @@ namespace SnBenchmarkTest
         [TestMethod]
         public void PathSet_ExprExec_Parent()
         {
-            var profile0 = new Profile("Profile0", new List<BenchmarkActionExpression>());
+            var profile0 = new Profile("Profile0", ProfileLocation, new List<BenchmarkActionExpression>());
             PathSet.Create("Profile0", "PathSet0", new[] { "/Root/A0/B0/Path0", "/Root/A1/B1/Path1", "/Root/A2/B2/Path2" });
 
             var expectedUrl = "/OData.svc/Root/A0/B0?metadata=no";
@@ -446,7 +447,7 @@ namespace SnBenchmarkTest
         [TestMethod]
         public void PathSet_ExprExec_Entity()
         {
-            var profile0 = new Profile("Profile0", new List<BenchmarkActionExpression>());
+            var profile0 = new Profile("Profile0", ProfileLocation, new List<BenchmarkActionExpression>());
             PathSet.Create("Profile0", "PathSet0", new[] { "/Root/A0/B0/Path0", "/Root/A1/B1/Path1", "/Root/A2/B2/Path2" });
 
             var expectedUrl = "/OData.svc/Root/A0/B0('Path0')?metadata=no";
@@ -457,7 +458,7 @@ namespace SnBenchmarkTest
         [TestMethod]
         public void PathSet_ExprExec_ParentParent()
         {
-            var profile0 = new Profile("Profile0", new List<BenchmarkActionExpression>());
+            var profile0 = new Profile("Profile0", ProfileLocation, new List<BenchmarkActionExpression>());
             PathSet.Create("Profile0", "PathSet0", new[] { "/Root/A0/B0/Path0", "/Root/A1/B1/Path1", "/Root/A2/B2/Path2" });
 
             var expectedUrl = "/OData.svc/Root/A0?metadata=no";
@@ -468,7 +469,7 @@ namespace SnBenchmarkTest
         [TestMethod]
         public void PathSet_ExprExec_ParentParentEntity()
         {
-            var profile0 = new Profile("Profile0", new List<BenchmarkActionExpression>());
+            var profile0 = new Profile("Profile0", ProfileLocation, new List<BenchmarkActionExpression>());
             PathSet.Create("Profile0", "PathSet0", new[] { "/Root/A0/B0/Path0", "/Root/A1/B1/Path1", "/Root/A2/B2/Path2" });
 
             var expectedUrl = "/OData.svc/Root('A0')?metadata=no";
@@ -479,7 +480,7 @@ namespace SnBenchmarkTest
         [TestMethod]
         public void PathSet_ExprExec_ParentParentParentEntity()
         {
-            var profile0 = new Profile("Profile0", new List<BenchmarkActionExpression>());
+            var profile0 = new Profile("Profile0", ProfileLocation, new List<BenchmarkActionExpression>());
             PathSet.Create("Profile0", "PathSet0", new[] { "/Root/A0/B0/Path0", "/Root/A1/B1/Path1", "/Root/A2/B2/Path2" });
 
             var expectedUrl = "/OData.svc/('Root')?metadata=no";
@@ -501,7 +502,7 @@ namespace SnBenchmarkTest
             var webAccess = new TestWebAccess();
             Web.WebAccess = webAccess;
 
-            var profile = Profile.Parse("Profile0", src, speedItems);
+            var profile = Profile.Parse("Profile0", src, ProfileLocation, speedItems);
             IEnumerable<PathSetExpression> psExprs;
             Profile.GetPathSets(profile, out psExprs);
 

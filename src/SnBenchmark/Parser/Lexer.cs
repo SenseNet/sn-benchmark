@@ -66,6 +66,12 @@ namespace SnBenchmark.Parser
                 return;
             }
 
+            if (trimmed.StartsWith(Token.Upload))
+            {
+                CurrentToken = new Token { Type = TokenType.Upload, Value = trimmed.Substring(Token.Upload.Length).TrimStart() };
+                return;
+            }
+
             CurrentToken = new Token { Type = TokenType.Unparsed, Value = line };
         }
     }

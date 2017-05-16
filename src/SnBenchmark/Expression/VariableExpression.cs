@@ -24,11 +24,6 @@ namespace SnBenchmark.Expression
             return new VariableExpression(Name, ObjectName, PropertyPath);
         }
 
-        internal override void Test(IExecutionContext context, string actionId, string profileResponsesDirectory)
-        {
-            // do nothing
-        }
-
         internal override Task ExecuteAsync(IExecutionContext context, string actionId)
         {
             var @object = context.GetVariable(ObjectName);
@@ -38,6 +33,13 @@ namespace SnBenchmark.Expression
             // Return an empty task as this particular method 
             // does not need to execute anything asynchronously.
             return Task.FromResult<object>(null);
+        }
+
+        internal override void Test(IExecutionContext context, string actionId, string profileResponsesDirectory)
+        {
+            var @object = context.GetVariable(ObjectName);
+            var value = ResolveProperty(@object as string, PropertyPath);
+            context.SetVariable(Name, value);
         }
 
         private static object ResolveProperty(string objectSrc, string[] propertyPath)

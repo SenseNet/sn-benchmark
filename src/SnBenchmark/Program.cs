@@ -19,12 +19,6 @@ namespace SnBenchmark
 
         private static void Main(string[] args)
         {
-//UNDONE: DELETE HACK
-#if DEBUG
-args = new[] {"-PROFILE:uploader:1+1", "-SITE:http://localhost", "-USR:admin", "-PWD:admin", "-TEST"};
-#endif
-
-
             ServicePointManager.DefaultConnectionLimit = 300;
 
             _configuration = new Configuration();
@@ -143,7 +137,7 @@ args = new[] {"-PROFILE:uploader:1+1", "-SITE:http://localhost", "-USR:admin", "
                 var count = item.Value;
 
                 var src = LoadProfile(name, profilesDirectory);
-                var profile = Profile.Parse(name, src, speedItems);
+                var profile = Profile.Parse(name, src, profilesDirectory, speedItems);
 
                 IEnumerable<PathSetExpression> psExpr;
                 Profile.GetPathSets(profile, out psExpr);

@@ -45,13 +45,16 @@ namespace SnBenchmark
 
         public string Name { get; }
 
+        public string Location { get; }
+
         public List<BenchmarkActionExpression> Actions { get; }
 
         //======================================================== Constructors
 
-        public Profile(string name, List<BenchmarkActionExpression> actions)
+        public Profile(string name, string location, List<BenchmarkActionExpression> actions)
         {
             Name = name;
+            Location = location;
             Actions = actions;
             Id = ++_lastId;
             InitialIndex = GetNextInitialIndexByProfileName(name);
@@ -66,18 +69,18 @@ namespace SnBenchmark
         /// <param name="src">Profile definition script.</param>
         /// <param name="speedItems">List of response limit names.</param>
         /// <returns>A fully initialized profile object.</returns>
-        public static Profile Parse(string name, string src, List<string> speedItems)
+        public static Profile Parse(string name, string src, string location, List<string> speedItems)
         {
-            var parser = new ProfileParser(src, speedItems);
+            var parser = new ProfileParser(src, location, speedItems);
             var benchmarkActions = parser.Parse();
-            return new Profile(name, benchmarkActions);
+            return new Profile(name, location, benchmarkActions);
         }
 
         //======================================================== Instance API
 
         internal Profile Clone()
         {
-            return new Profile(this.Name, this.Actions.Select(action => action.Clone()).ToList());
+            return new Profile(this.Name, this.Location, this.Actions.Select(action => action.Clone()).ToList());
         }
 
         private bool _running;

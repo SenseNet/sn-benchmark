@@ -9,6 +9,8 @@ namespace SnBenchmarkTest
     [TestClass]
     public class ProfileParserTests
     {
+        private const string ProfileLocation = "c:\\fakelocation";
+
         #region Tokenizer tests
 
         [TestMethod]
@@ -98,6 +100,18 @@ namespace SnBenchmarkTest
             Assert.AreEqual(value, lexer.CurrentToken.Value);
         }
         [TestMethod]
+        public void Profile_TokenizeUpload()
+        {
+            var value = "files\\Test.txt /Root/Benchmark/UploadTest";
+            var src = $"UPLOAD: {value}";
+            var lexer = new Lexer(src);
+
+            lexer.NextToken();
+
+            Assert.AreEqual(TokenType.Upload, lexer.CurrentToken.Type);
+            Assert.AreEqual(value, lexer.CurrentToken.Value);
+        }
+        [TestMethod]
         public void Profile_TokenizeUnparsed()
         {
 
@@ -118,7 +132,7 @@ namespace SnBenchmarkTest
             var value = "three word comment";
             var speedItems = new List<string> { RequestExpression.NormalSpeed };
             var src = $"; {value}";
-            var parser = new ProfileParser(src, speedItems);
+            var parser = new ProfileParser(src, ProfileLocation, speedItems);
 
             var result = parser.Parse();
 
@@ -132,7 +146,7 @@ namespace SnBenchmarkTest
             var value = $"{method} {url}";
             var speedItems = new List<string> { RequestExpression.NormalSpeed };
             var src = $"REQ: {value}";
-            var parser = new ProfileParser(src, speedItems);
+            var parser = new ProfileParser(src, ProfileLocation, speedItems);
 
             var result = parser.Parse();
 
@@ -152,7 +166,7 @@ namespace SnBenchmarkTest
             var value = $"{method} {url}";
             var speedItems = new List<string> { RequestExpression.NormalSpeed };
             var src = $"REQ: {value}";
-            var parser = new ProfileParser(src, speedItems);
+            var parser = new ProfileParser(src, ProfileLocation, speedItems);
 
             var result = parser.Parse();
 
@@ -174,7 +188,7 @@ namespace SnBenchmarkTest
             var speedItems = new List<string> { RequestExpression.NormalSpeed };
             var src = $@"REQ: {reqValue}" + Environment.NewLine
                       + $@"DATA: {dataValue}";
-            var parser = new ProfileParser(src, speedItems);
+            var parser = new ProfileParser(src, ProfileLocation, speedItems);
 
             var result = parser.Parse();
 
@@ -200,7 +214,7 @@ namespace SnBenchmarkTest
                       + @"    ""Description"":""asdfqwer""" + Environment.NewLine
                       + @"}]" + Environment.NewLine
                       + @"SPEED: Medium" + Environment.NewLine;
-            var parser = new ProfileParser(src, speedItems);
+            var parser = new ProfileParser(src, ProfileLocation, speedItems);
 
             var result = parser.Parse();
 
@@ -224,7 +238,7 @@ namespace SnBenchmarkTest
             var src = $@"REQ: {reqValue}" + Environment.NewLine
                       + $@"DATA: {dataValue}" + Environment.NewLine
                       + $@"SPEED: {speedValue}";
-            var parser = new ProfileParser(src, speedItems);
+            var parser = new ProfileParser(src, ProfileLocation, speedItems);
 
             var result = parser.Parse();
 
@@ -245,7 +259,7 @@ namespace SnBenchmarkTest
             var speedItems = new List<string> { RequestExpression.NormalSpeed };
             var src = $@"REQ: {reqValue}" + Environment.NewLine
                       + $@"SPEED:";
-            var parser = new ProfileParser(src, speedItems);
+            var parser = new ProfileParser(src, ProfileLocation, speedItems);
 
             var result = parser.Parse();
 
@@ -262,7 +276,7 @@ namespace SnBenchmarkTest
             var value = "@Name = @Response.d.Name";
             var speedItems = new List<string> { RequestExpression.NormalSpeed };
             var src = $"VAR: {value}";
-            var parser = new ProfileParser(src, speedItems);
+            var parser = new ProfileParser(src, ProfileLocation, speedItems);
 
             var result = parser.Parse();
 
@@ -281,7 +295,7 @@ namespace SnBenchmarkTest
             var value = "10000";
             var speedItems = new List<string> { RequestExpression.NormalSpeed };
             var src = $"WAIT: {value}";
-            var parser = new ProfileParser(src, speedItems);
+            var parser = new ProfileParser(src, ProfileLocation, speedItems);
 
             var result = parser.Parse();
 
@@ -297,7 +311,7 @@ namespace SnBenchmarkTest
             var value = $"{name} {definition}";
             var speedItems = new List<string> { RequestExpression.NormalSpeed };
             var src = $"PATHSET: {value}";
-            var parser = new ProfileParser(src, speedItems);
+            var parser = new ProfileParser(src, ProfileLocation, speedItems);
 
             var result = parser.Parse();
 
@@ -307,9 +321,24 @@ namespace SnBenchmarkTest
             Assert.AreEqual(name, psetExp.Name);
             Assert.AreEqual(definition, psetExp.Definition);
         }
+        [TestMethod]
+        public void Profile_ParseUpload_File()
+        {
+            var source = "files\\Test.txt";
+            var target = "/Root/Benchmark/UploadTest";
+            var value = $"{source} {target}";
+            var speedItems = new List<string> { RequestExpression.NormalSpeed };
+            var src = $"UPLOAD: {value}";
+            var parser = new ProfileParser(src, ProfileLocation, speedItems);
+
+            var result = parser.Parse();
+
+            Assert.AreEqual(1, result.Count);
+            Assert.IsTrue(result[0] is UploadExpression);
+            var uploadExp = (UploadExpression)result[0];
+            Assert.AreEqual(source, uploadExp.Source);
+            Assert.AreEqual(target, uploadExp.Target);
+        }
 
     }
 }
-
-
-

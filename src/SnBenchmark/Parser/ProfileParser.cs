@@ -10,6 +10,7 @@ namespace SnBenchmark.Parser
     {
         private readonly Lexer _lexer;
         private readonly List<BenchmarkActionExpression> _actions;
+        private readonly string _location;
         private readonly List<string> _speedItems;
 
         /// <summary>
@@ -17,10 +18,11 @@ namespace SnBenchmark.Parser
         /// </summary>
         /// <param name="src">Profile script definition file contents.</param>
         /// <param name="speedItems">Speed names used in the profile.</param>
-        public ProfileParser(string src, List<string> speedItems)
+        public ProfileParser(string src, string location, List<string> speedItems)
         {
             _lexer = new Lexer(src);
             _lexer.NextToken();
+            _location = location;
             _speedItems = speedItems;
             _actions = new List<BenchmarkActionExpression>();
         }
@@ -42,6 +44,7 @@ namespace SnBenchmark.Parser
                     case TokenType.Wait: parsedAction = ParseWait(token); break;
                     case TokenType.Variable: parsedAction = ParseVariable(token); break;
                     case TokenType.PathSet: parsedAction = ParsePathSet(token); break;
+                    case TokenType.Upload: parsedAction = ParseUpload(token); break;
                     case TokenType.Unparsed: throw new ApplicationException("Unparsed line: " + token.Value);
                     case TokenType.Eof: return _actions;
                     case TokenType.Data:
@@ -113,6 +116,20 @@ namespace SnBenchmark.Parser
             _lexer.NextToken();
 
             return new PathSetExpression(name.Trim(), definition.Trim());
+        }
+        private BenchmarkActionExpression ParseUpload(Token token)
+        {
+            var src = token.Value;
+            var p = src.IndexOf(" /Root", StringComparison.OrdinalIgnoreCase);
+            if (p < 0)
+                throw new ApplicationException("Syntax error: must starts with a global or local filesystem path followed by a repository path.");
+
+            var source = src.Substring(0, p).Trim();
+            var target = src.Substring(p).Trim();
+
+            _lexer.NextToken();
+
+            return new UploadExpression(source, target, _location);
         }
 
         private BenchmarkActionExpression ParseRequest(Token token)

@@ -68,6 +68,7 @@
     <Compile Include="Expression\IExecutionContext.cs" />
     <Compile Include="Expression\PathSetExpression.cs" />
     <Compile Include="Expression\RequestExpression.cs" />
+    <Compile Include="Expression\UploadExpression.cs" />
     <Compile Include="Expression\VariableExpression.cs" />
     <Compile Include="Expression\WaitExpression.cs" />
     <Compile Include="IWebAccess.cs" />
