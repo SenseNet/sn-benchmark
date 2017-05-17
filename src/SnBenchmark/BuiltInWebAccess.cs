@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -62,7 +63,8 @@ namespace SnBenchmark
             string responseString;
             try
             {
-                LogRequest(url);
+                var data = requestBody?.Length > 100 ? requestBody.Substring(0, 100) + "..." : requestBody;
+                LogRequest(data == null ? $"{httpMethod} {url}" : $"{httpMethod} {url} | {data}");
                 responseString = await RESTCaller.GetResponseStringAsync(new Uri(url), server, method, requestBody);
             }
             finally
@@ -83,6 +85,43 @@ namespace SnBenchmark
             }
 
             return responseString;
+        }
+
+        public async Task<Content> UploadAsync(string actionId, ServerContext server, string speedItem, string targetContainerPath, string fileName,
+            Stream stream)
+        {
+            if (Program.Pausing)
+                return null;
+
+            var startTime = DateTime.UtcNow;
+            Interlocked.Increment(ref _activeRequests);
+            _allRequests++;
+            _requestsPerSec++;
+
+            Content responseContent;
+            try
+            {
+                LogRequest($"UPLOAD: fileName:{fileName} target:{targetContainerPath}, server:{server.Url}, actionId:{actionId}");
+                responseContent = await Content.UploadAsync(targetContainerPath, fileName, stream);
+            }
+            finally
+            {
+                Interlocked.Decrement(ref _activeRequests);
+                var duration = DateTime.UtcNow - startTime;
+
+                lock (_responseTimesSync)
+                {
+                    _responseTimes.Enqueue(duration);
+                    if (_responseTimes.Count > 100)
+                        _responseTimes.Dequeue();
+                    AverageResponseTimeInSec = _responseTimes.Average(x => x.TotalMilliseconds) / 1000;
+                }
+
+                lock (_periodResponseTimes)
+                    _periodResponseTimes[speedItem].Add(duration);
+            }
+
+            return responseContent;
         }
 
         public async Task<IEnumerable<string>> QueryPathSetAsync(string query)

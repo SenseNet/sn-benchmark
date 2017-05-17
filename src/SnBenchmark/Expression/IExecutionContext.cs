@@ -9,5 +9,7 @@
         object GetVariable(string name);
 
         string ReplaceTemplates(string input);
+
+        string GetResponseFilePath(string profileResponsesDirectory, string actionId);
     }
 }

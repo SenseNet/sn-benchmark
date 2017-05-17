@@ -17,6 +17,7 @@ namespace SnBenchmark.Parser
         /// Initializes a new instance of the ProfileParser class.
         /// </summary>
         /// <param name="src">Profile script definition file contents.</param>
+        /// <param name="location">Path of the profile.</param>
         /// <param name="speedItems">Speed names used in the profile.</param>
         public ProfileParser(string src, string location, List<string> speedItems)
         {
@@ -36,7 +37,7 @@ namespace SnBenchmark.Parser
             while (true)
             {
                 var token = _lexer.CurrentToken;
-                BenchmarkActionExpression parsedAction = null;
+                BenchmarkActionExpression parsedAction;
                 switch (token.Type)
                 {
                     case TokenType.Comment: parsedAction = ParseComment(token); break;
@@ -49,7 +50,7 @@ namespace SnBenchmark.Parser
                     case TokenType.Eof: return _actions;
                     case TokenType.Data:
                     case TokenType.Speed:
-                        break;
+                        throw new ApplicationException($"Unexpected token: {token.Type}: {token.Value}");
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -129,7 +130,9 @@ namespace SnBenchmark.Parser
 
             _lexer.NextToken();
 
-            return new UploadExpression(source, target, _location);
+            var speed = ParseSpeed(_lexer.CurrentToken);
+
+            return new UploadExpression(source, target, _location, speed);
         }
 
         private BenchmarkActionExpression ParseRequest(Token token)

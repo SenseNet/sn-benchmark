@@ -1,5 +1,6 @@
 ﻿using SenseNet.Client;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace SnBenchmark
@@ -45,6 +46,16 @@ namespace SnBenchmark
         public static async Task<string> RequestAsync(string actionId, ServerContext server, string speedItem, string httpMethod, string url, string requestBody)
         {
             return await WebAccess.RequestAsync(actionId, server, speedItem, httpMethod, url, requestBody);
+        }
+
+        /// <summary>
+        /// Uploads a stream nchronous request to the server and returns with the Content.
+        /// Errors are logged and time measuring values and counters are updated.
+        /// </summary>
+        public static async Task<Content> UploadAsync(string actionId, ServerContext server, string speedItem, string targetContainerPath,
+            string fileName, Stream stream)
+        {
+            return await WebAccess.UploadAsync(actionId, server, speedItem, targetContainerPath, fileName, stream);
         }
 
         /// <summary>

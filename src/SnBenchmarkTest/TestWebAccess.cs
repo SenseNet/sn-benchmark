@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using SenseNet.Client;
 using SnBenchmark;
@@ -24,6 +25,12 @@ namespace SnBenchmarkTest
 
         public Task<string> RequestAsync(string actionId, ServerContext server, string speedItem, string httpMethod, string url,
             string requestBody)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Content> UploadAsync(string actionId, ServerContext server, string speedItem, string targetContainerPath, string fileName,
+            Stream stream)
         {
             throw new NotImplementedException();
         }

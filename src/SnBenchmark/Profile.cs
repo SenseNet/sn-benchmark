@@ -3,6 +3,7 @@ using SnBenchmark.Parser;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -189,6 +190,11 @@ namespace SnBenchmark
             }
 
             return result;
+        }
+
+        public string GetResponseFilePath(string profileResponsesDirectory, string actionId)
+        {
+            return Path.Combine(profileResponsesDirectory, $"Response_{actionId}.txt");
         }
 
         private Dictionary<string, object> GetScope(string name)

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using SenseNet.Client;
 
@@ -22,6 +23,13 @@ namespace SnBenchmark
         /// </summary>
         Task<string> RequestAsync(string actionId, ServerContext server, string speedItem, string httpMethod, string url,
             string requestBody);
+
+        /// <summary>
+        /// Uploads a stream nchronous request to the server and returns with the Content.
+        /// Errors are logged and time measuring values and counters are updated.
+        /// </summary>
+        Task<Content> UploadAsync(string actionId, ServerContext server, string speedItem, string targetContainerPath,
+            string fileName, Stream stream);
 
         /// <summary>
         /// Returns with an enumerable path set according to the specified content query.
