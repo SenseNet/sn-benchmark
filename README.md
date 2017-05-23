@@ -29,15 +29,18 @@ The idea is that after a few iterations you will be able to determine the **opti
 
 The result of a benchmark execution will be a *csv file* containing request/response times and other collected data that you can use to visualize the behavior of your site under different load. See an example later in this document.
 
+For debugging purposes a request log will be written after the execution. This file contains information about the last 10000 request.
+
 ## Execution workflow
 <a name="ExecutionWorkflow"></a>
 This is what the tool does, when you execute it:
-1. loads the provided profiles from text files
-2. starts measurement with a short warmup period
-3. adds more profiles periodically
-4. collects average response times during a period
-5. stops adding more profiles when a *predefined hypotetical limit* is reached
-6. waits while all the remaining requests finish
+1. loads the provided profiles from text files.
+2. starts measurement with a short warmup period.
+3. adds more profiles periodically.
+4. collects average response times during a period.
+5. stops adding more profiles when a *predefined hypotetical limit* is reached.
+6. waits while all the remaining requests finish.
+7. writes the last requests to a log file.
 
 As a result, the tool will generate a csv file (see below) and it will provide the last average response times *before the limit has been reached*.
 
@@ -115,6 +118,20 @@ The parameter value can contain one *asterisk* (*) as a placeholder character th
 ```text
 -OUT:Benchmark_*.csv
 ```
+##### TESTONLY (aliases: T, TEST) - optional
+Plays the initial profile cycle and saves the web responses into separated text files for debugging purposes. Limits, Warmup, Growing, Maxerrors, Verbose parameters are ignored. Using the benchmark tool with this parameter helps to validate the profiles. For example if the profile parameter is **"Profile1:2+2,Profile2:1+1"** and both profiles contain 2 requests, the following structure will be created in the output directory:
+```text
+Benchmark_2017-05-17_01-46-22   | directory for all trace files
+    Profile1                    | directory for Profile1 responses
+        Response_P0A0.txt       | first iteration first request
+        Response_P0A1.txt       | first iteration second request
+        Response_P2A1.txt       | second iteration first request
+        Response_P2A1.txt       | second iteration second request
+    Profile2                    | directory for Profile2 responses
+        Response_P1A0.txt       | first request
+        Response_P1A1.txt       | second request
+```
+Response file name have an unique identifier (e.g. P2A1) that helps identify the source line of the profile. The number after P is the profile id that depends from number of profiles and some random factors but always unique and growing. The number after A is the zero based activity index in the profile. Response files contain the raw web responses.
 
 ## Benchmark results
 <a name="BenchmarkResults"></a>
@@ -222,22 +239,7 @@ There is only line comment, it is not possible to write an inline comment.
 
 ### PATHSET
 
-Path set is a ..... .... .... .... .... .... .... .... .... .... .... .... .... 
-.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
-.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
-.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
-.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
-.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
-.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
-.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
-.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
-.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
-.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
-.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
-.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
-.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
-.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
-.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+Path set is a technique that helps to use variable contents in the profiles. The set is defined by a ContentQuery and referenced in the webrequests indirectly. Every use case gets a path from the set. The actual path instance depends from the profileid and kind of reference (see below under the USAGE).
 
 #### Declaration
 
@@ -250,33 +252,39 @@ It is strongly recommended to use AND / OR logical operators in the content quer
 
 #### Usage
 
-asdf
-1. Start: Two hashmark ('##').
-2. Name: Reference name of the path set.
-3. Addressing: Number or keyword that defines the profile's index and returns with the item that placed on the indexed position of the referenced set. The valid values:
-   - **'First'**: Sets the profile's index to de original value.
-   - **'Current'**: Stays on the current position.
-   - **'Next'**: Increment the position 
-   - **Direct index**: A non-negative integer number that ignores the profile's index.
-4. Transformation:
-5. Finish:  Two hashmark ('##').
+A PathSet reference have more parts. See the syntax:
+```text
+##Name.Addressing[.Transformation]##
+```
+
+1. **Start**: Two hashmark ('##').
+2. **Name**: Reference name of the path set.
+3. **Addressing**: Number or keyword that defines the profile's index and returns with the item that placed on the indexed position of the referenced set. The valid values:
+    - **'First'**: Sets the profile's index to de original value.
+    - **'Current'**: Stays on the current position.
+    - **'Next'**: Increment the position 
+    - **Direct index**: A non-negative integer number that ignores the profile's index.
+4.  **Transformation**: Transforms the actual path of the pathset
+    - **Parent**: Leaves the last segment of the path. This transformation can be used in chain but should be used with caution because there is no any validation.
+    - **ODataEntity**: Changes the last segment of the path to indexer. For example "/Root/Segment1/Segment2" will be transformed to "/Root/Segment1('Segment2')"
+5. **Finish**:  Two hashmark ('##').
 
 ***Note**: the profile's index cannot exceed the path set size because every index operation is followed by a normalization (index modulo path set count).*
-
-
-
-
 
 The following example simulates the tipical usage:
 ```text
 ; Define 100 large file
 PATHSET: BigFiles Size:>236000 AND TypeIs:File AND InTree:'/Root/Benchmark/Files' .TOP:100 .AUTOFILTERS:OFF
 
-; Simulate browsing step #1: File list
+; Simulate browsing step #1: folder list
+REQ: GET /odata.svc##BigFiles.current.parent.parent##?metadata=no&$select=Name,DisplayName
+WAIT: 2000
+
+; Simulate browsing step #2: file list
 REQ: GET /odata.svc##BigFiles.current.parent##?metadata=no&$select=Name,DisplayName
 WAIT: 2000
 
-; Simulate browsing step #1: File list
+; Simulate browsing step #3: Select file and get relevant properties and metadata
 REQ: GET /odata.svc##BigFiles.current.odataentity##?$select=Id,Path,Size,DisplayName
 WAIT: 2000
 
@@ -331,6 +339,24 @@ Variable names must start with the *'@'* character. Only a property path is allo
 ```text
 VAR: @Name = @Response.d.Name
 ```
+### UPLOAD
+
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... .... 
+.... .... .... .... .... .... .... .... .... .... .... .... .... .... .... ....
 
 ### Templating: using variables
 In request urls or data it is possible to mark places for substitution with variables defined earlier.
@@ -355,7 +381,7 @@ DATA: models=[{"Description":"description of <<@Name>>"}]
 <a name="Resources"></a>
 The SnBenchmark tool itself does not consume too much resources. It is written as a completely asynchronous tool, you can start it on an average machine.
 
-You should pay attention to the generated log files though: after a few iterations the csv or error files may consume a significant amout of disk space.
+You should pay attention to the generated log files though: after a few iterations the csv or error files but especially request logs and test directories may consume a significant amout of disk space.
 
 ## Hardware
 <a name="Hardware"></a>
