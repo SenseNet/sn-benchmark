@@ -359,7 +359,7 @@ namespace SnBenchmark
         {
             return $"{profiles.Count} profiles ({string.Join(", ", RunningProfiles.GroupBy(x => x.Name).Select(g => "" + g.Key + ":" + g.Count()))}), " + 
                 $"all requests:{Web.AllRequests}, errors:{_errorCount}, " +
-                $"average respose times: {string.Join(", ", avgResponseTimesInSec.Select(y => $"{y.Key}:{y.Value:0.00}"))}.";
+                $"average response times: {string.Join(", ", avgResponseTimesInSec.Select(y => $"{y.Key}:{y.Value:0.00}"))}.";
         }
         private static void WriteColumnHeaders(IEnumerable<string> speedItems)
         {
