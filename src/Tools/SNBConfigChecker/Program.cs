@@ -13,84 +13,104 @@ namespace SNBConfigChecker
     {
         static void Main(string[] args)
         {
-            var serverPath1 = @"\\snbweb01\Web";
-            var serverPath2 = @"\\snbweb02\Web";
-
-            var snWebs = Directory.GetDirectories(serverPath1)
-                .Concat(Directory.GetDirectories(serverPath2))
-                .Select(SnWeb.Create)
-                .ToArray();
-
-            Console.WriteLine("NETWORKTARGETS");
-            Console.WriteLine();
-            TraceConfigs(snWebs, "/configuration/sensenet/packaging/add[@key='NetworkTargets']/@value");
-            Console.WriteLine();
-            Console.WriteLine("CONNECTIONSTRINGS");
-            Console.WriteLine();
-            Console.WriteLine("SnCrMsSql");
-            Console.WriteLine();
-            TraceConfigs(snWebs, "/configuration/connectionStrings/add[@name='SnCrMsSql']/@connectionString");
-            Console.WriteLine();
-            Console.WriteLine("SenseNet.MongoDbBlobDatabase");
-            Console.WriteLine();
-            TraceConfigs(snWebs, "/configuration/connectionStrings/add[@name='SenseNet.MongoDbBlobDatabase']/@connectionString");
-            Console.WriteLine();
-            Console.WriteLine("DATA HANDLING");
-            Console.WriteLine();
-            Console.WriteLine("BlobProvider");
-            Console.WriteLine();
-            TraceConfigs(snWebs, "/configuration/appSettings/add[@key='BlobProvider']/@value");
-            Console.WriteLine();
-            Console.WriteLine("Minimum blob size");
-            Console.WriteLine();
-            TraceConfigs(snWebs, "/configuration/appSettings/add[@key='MinimumSizeForBlobProviderKB']/@value");
-            Console.WriteLine();
-            Console.WriteLine("MongoDb blob size");
-            Console.WriteLine();
-            TraceConfigs(snWebs, "/configuration/appSettings/add[@key='MongoDbBlobDatabaseChunkSize']/@value");
-            Console.WriteLine();
-            Console.WriteLine("BinaryChunkSize");
-            Console.WriteLine();
-            TraceConfigs(snWebs, "/configuration/sensenet/dataHandling/add[@key='BinaryChunkSize']/@value");
-            Console.WriteLine();
-            Console.WriteLine("MESSAGE PROVIDERS");
-            Console.WriteLine();
-            Console.WriteLine("Repository");
-            Console.WriteLine();
-            TraceConfigs(snWebs, "/configuration/sensenet/messaging/add[@key='ClusterChannelProvider']/@value");
-            Console.WriteLine();
-            Console.WriteLine("Security");
-            Console.WriteLine();
-            TraceConfigs(snWebs, "/configuration/appSettings/add[@key='SecurityMessageProvider']/@value");
-            Console.WriteLine();
-            Console.WriteLine("MESSAGE QUEUES");
-            Console.WriteLine();
-            Console.WriteLine("Repository");
-            Console.WriteLine();
-            TraceConfigs(snWebs, "/configuration/sensenet/messaging/add[@key='MsmqChannelQueueName']/@value");
-            Console.WriteLine();
-            Console.WriteLine("Security");
-            Console.WriteLine();
-            TraceConfigs(snWebs, "/configuration/appSettings/add[@key='SecurityMsmqChannelQueueName']/@value");
-            Console.WriteLine();
-            Console.WriteLine("-------------------------------------------------------------------------");
-            Console.WriteLine();
-            Console.WriteLine("LAST INDEXING ACTIVITY ID");
-            Console.WriteLine();
-            TraceLastActivityIds(snWebs);
-            Console.WriteLine();
-            Console.WriteLine("-------------------------------------------------------------------------");
-            Console.WriteLine();
-            Console.WriteLine("LUCENE LOCK FILES");
-            Console.WriteLine();
-            TraceLuceneLockFiles(snWebs);
-            Console.WriteLine();
+            var snWebs = GetSnWebs(args);
+            if (snWebs != null)
+            {
+                Console.WriteLine("NETWORKTARGETS");
+                Console.WriteLine();
+                TraceConfigs(snWebs, "/configuration/sensenet/packaging/add[@key='NetworkTargets']/@value");
+                Console.WriteLine();
+                Console.WriteLine("CONNECTIONSTRINGS");
+                Console.WriteLine();
+                Console.WriteLine("SnCrMsSql");
+                Console.WriteLine();
+                TraceConfigs(snWebs, "/configuration/connectionStrings/add[@name='SnCrMsSql']/@connectionString");
+                Console.WriteLine();
+                Console.WriteLine("SenseNet.MongoDbBlobDatabase");
+                Console.WriteLine();
+                TraceConfigs(snWebs,
+                    "/configuration/connectionStrings/add[@name='SenseNet.MongoDbBlobDatabase']/@connectionString");
+                Console.WriteLine();
+                Console.WriteLine("DATA HANDLING");
+                Console.WriteLine();
+                Console.WriteLine("BlobProvider");
+                Console.WriteLine();
+                TraceConfigs(snWebs, "/configuration/appSettings/add[@key='BlobProvider']/@value");
+                Console.WriteLine();
+                Console.WriteLine("Minimum blob size");
+                Console.WriteLine();
+                TraceConfigs(snWebs, "/configuration/appSettings/add[@key='MinimumSizeForBlobProviderKB']/@value");
+                Console.WriteLine();
+                Console.WriteLine("MongoDb blob size");
+                Console.WriteLine();
+                TraceConfigs(snWebs, "/configuration/appSettings/add[@key='MongoDbBlobDatabaseChunkSize']/@value");
+                Console.WriteLine();
+                Console.WriteLine("BinaryChunkSize");
+                Console.WriteLine();
+                TraceConfigs(snWebs, "/configuration/sensenet/dataHandling/add[@key='BinaryChunkSize']/@value");
+                Console.WriteLine();
+                Console.WriteLine("MESSAGE PROVIDERS");
+                Console.WriteLine();
+                Console.WriteLine("Repository");
+                Console.WriteLine();
+                TraceConfigs(snWebs, "/configuration/sensenet/messaging/add[@key='ClusterChannelProvider']/@value");
+                Console.WriteLine();
+                Console.WriteLine("Security");
+                Console.WriteLine();
+                TraceConfigs(snWebs, "/configuration/appSettings/add[@key='SecurityMessageProvider']/@value");
+                Console.WriteLine();
+                Console.WriteLine("MESSAGE QUEUES");
+                Console.WriteLine();
+                Console.WriteLine("Repository");
+                Console.WriteLine();
+                TraceConfigs(snWebs, "/configuration/sensenet/messaging/add[@key='MsmqChannelQueueName']/@value");
+                Console.WriteLine();
+                Console.WriteLine("Security");
+                Console.WriteLine();
+                TraceConfigs(snWebs, "/configuration/appSettings/add[@key='SecurityMsmqChannelQueueName']/@value");
+                Console.WriteLine();
+                Console.WriteLine("-------------------------------------------------------------------------");
+                Console.WriteLine();
+                Console.WriteLine("LAST INDEXING ACTIVITY ID");
+                Console.WriteLine();
+                TraceLastActivityIds(snWebs);
+                Console.WriteLine();
+                Console.WriteLine("-------------------------------------------------------------------------");
+                Console.WriteLine();
+                Console.WriteLine("LUCENE LOCK FILES");
+                Console.WriteLine();
+                TraceLuceneLockFiles(snWebs);
+                Console.WriteLine();
+            }
 
             if (Debugger.IsAttached)
             {
                 Console.Write("Press <enter> to exit ...");
                 Console.ReadLine();
             }
+        }
+        private static SnWeb[] GetSnWebs(string[] serverPaths)
+        {
+            if (!ValidateServerPaths(serverPaths))
+                return null;
+
+            return serverPaths
+                .SelectMany(Directory.GetDirectories)
+                .Select(SnWeb.Create)
+                .ToArray();
+        }
+        private static bool ValidateServerPaths(string[] serverPaths)
+        {
+            var ok = true;
+            foreach (var serverPath in serverPaths)
+            {
+                if (!Directory.Exists(serverPath))
+                {
+                    Console.WriteLine($"Directory not found: {serverPath}");
+                    ok = false;
+                }
+            }
+            return ok;
         }
 
         private static void TraceConfigs(SnWeb[] snWebs, string xpath)

@@ -1,9 +1,11 @@
-﻿using System.IO;
+﻿using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Xml;
 
 namespace SNBConfigChecker
 {
+    [DebuggerDisplay("{WebPath}")]
     public class SnWeb
     {
         public string WebPath { get; set; }
