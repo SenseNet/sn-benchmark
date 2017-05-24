@@ -9,12 +9,6 @@ namespace SNBConfigChecker
     {
         static void Main(string[] args)
         {
-//UNDONE: remove hack
-if (Debugger.IsAttached)
-{
-    args = new[] {@"\\snbweb01\Web", @"\\snbweb02\Web"};
-}
-
             var snWebs = GetSnWebs(args);
             if (snWebs != null)
             {

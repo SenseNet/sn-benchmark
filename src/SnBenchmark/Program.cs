@@ -19,16 +19,6 @@ namespace SnBenchmark
 
         private static void Main(string[] args)
         {
-//UNDONE: remove hack
-if (Debugger.IsAttached)
-{
-    args = new[]
-    {
-        "-GROW:30", "-LIMIT:NORMAL:4;FAST:4;SLOW:10", "-ERRORS:10", "-WARMUP:30", "-SITE:http://snbweb01.sn.hu,http://snbweb02.sn.hu",
-        "-USR:admin", "-PWD:admin", "-PROFILE:SwUploader50K:4+1"
-    };
-}
-
             ServicePointManager.DefaultConnectionLimit = 300;
 
             _configuration = new Configuration();
