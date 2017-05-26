@@ -35,7 +35,7 @@ namespace SNBCalc
             {
                 var summaryPath = Path.Combine(path, "summary.txt");
                 using (var summaryWriter = new StreamWriter(summaryPath, false))
-                    foreach (var file in Directory.GetFiles(path, "SNB*.csv"))
+                    foreach (var file in Directory.GetFiles(path, "*.csv"))
                         ProcessFile(file, summaryWriter);
                 return;
             }
