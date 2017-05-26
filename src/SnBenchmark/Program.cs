@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using SenseNet.Tools.CommandLineArguments;
+using SNBCalc;
 
 namespace SnBenchmark
 {
@@ -182,6 +183,8 @@ namespace SnBenchmark
         }
 
         private static readonly List<Profile> RunningProfiles = new List<Profile>();
+        private static BenchmarkEndPointCalculator _endPointDetector;
+        private static int _endPointDetected;
         private static System.Timers.Timer _timer;
         public static int StoppedProfiles { get; set; }
 
@@ -209,6 +212,8 @@ namespace SnBenchmark
 
         private static async Task Run(List<Profile> initialProfiles, List<Profile> growingProfiles)
         {
+            _endPointDetector = new BenchmarkEndPointCalculator();
+
             _timer = new System.Timers.Timer(1000.0);
             _timer.Elapsed += Timer_Elapsed;
             _timer.Disposed += Timer_Disposed;
@@ -349,7 +354,9 @@ namespace SnBenchmark
             _periodData = Web.GetPeriodDataAndReset();
             _lastBenchmarkResult = _benchmarkResult;
             _benchmarkResult = FormatBenchmarkResult(RunningProfiles, _periodData);
-            var finished = _periodData.Any(x => x.Value >= limits[x.Key]) || _errorCount >= _configuration.MaxErrors;
+            var finished = _periodData.Any(x => x.Value >= limits[x.Key])
+                           || _errorCount >= _configuration.MaxErrors
+                           || _endPointDetected >= 3;
             return finished;
         }
 
@@ -366,7 +373,7 @@ namespace SnBenchmark
             var speeds = speedItems.ToArray();
             if (_configuration.Verbose)
             {
-                Console.WriteLine("Pcount\tActive\tReq/sec\t" + string.Join("\t", speeds) + "\t" + string.Join("\t", speeds.Select(i => "L" + i.ToLower())));
+                Console.WriteLine("Pcount\tActive\tReq/sec\tEPDout\tTriggered\t" + string.Join("\t", speeds) + "\t" + string.Join("\t", speeds.Select(i => "L" + i.ToLower())));
             }
             else
             {
@@ -374,7 +381,7 @@ namespace SnBenchmark
                 Console.WriteLine("\t\t" + string.Join("\t", _limits.Values.Select(d => d.ToString("0.00")).ToArray()));
             }
 
-            var outputHead = "Pcount;Active;Req/sec;" + string.Join(";", speeds) + ";" + string.Join(";", speeds.Select(i => "L" + i.ToLower()));
+            var outputHead = "Pcount;Active;Req/sec;EPDout;Triggered;" + string.Join(";", speeds) + ";" + string.Join(";", speeds.Select(i => "L" + i.ToLower()));
 
             WriteToOutputFile(outputHead);
         }
@@ -382,7 +389,14 @@ namespace SnBenchmark
         public static bool Pausing;
         private static void Monitor(string consoleMessage = null)
         {
-            var logLine = $"{RunningProfiles.Count - StoppedProfiles}\t{Web.ActiveRequests}\t{Web.RequestsPerSec}\t" + 
+            var requestsPerSec = Web.RequestsPerSec;
+            var endpointDetected = _endPointDetector.Detect(requestsPerSec);
+            if (endpointDetected)
+                _endPointDetected++;
+
+            var logLine = $"{RunningProfiles.Count - StoppedProfiles}\t{Web.ActiveRequests}\t{Web.RequestsPerSec}\t" +
+                $"{_endPointDetector.CurrentValue * 100}\t" +
+                $"{(endpointDetected ? 100 : 0)}\t" +
                 $"{string.Join("\t", _periodData.Values.Select(d => d.ToString("0.00")).ToArray())}\t" + 
                 $"{string.Join("\t", _limits.Values.Select(d => d.ToString("0.00")).ToArray())}\t{(Pausing ? "pause" : "")}";                                                           // 5
 
@@ -408,7 +422,7 @@ namespace SnBenchmark
                 }
                 else
                 {
-                    Console.Write("-");
+                    Console.Write(endpointDetected ? "|" : "-");
                 }
             }
 
