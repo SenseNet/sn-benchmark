@@ -56,7 +56,7 @@ REQ: /OData.svc/infos/features('kpiworkspacesinfo')
 WAIT: 8000
 ```
 
-For a more complex example please check the Editor profile provided by us in the source directory. If you want to create a custom profile, put those text files in the *Profiles* folder next to the tool. See the language details in the [Profile Definition Language Guide](/profile-definition-language.md).
+For a more complex example please check the Editor profile provided by us in the source directory. If you want to create a custom profile, put those text files in the *Profiles* folder next to the tool. See the language details in the [Profile Definition Language Guide](/docs/profile-definition-language.md).
 
 ## Resources
 <a name="Resources"></a>
