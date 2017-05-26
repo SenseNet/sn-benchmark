@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-
+using System.Linq;
+// ReSharper disable PossibleNullReferenceException
 // ReSharper disable AssignNullToNotNullAttribute
 
 namespace SNBCalc
@@ -21,35 +22,35 @@ namespace SNBCalc
 
         static void Run(string[] args)
         {
-            if (args.Length != 1)
+            var path = args.FirstOrDefault(a => !a.Equals("-SUMMARY", StringComparison.InvariantCultureIgnoreCase));
+            var summary = args.Any(a => a.Equals("-SUMMARY", StringComparison.InvariantCultureIgnoreCase));
+            if (path == null)
             {
-                Console.WriteLine(args.Length == 0
-                    ? "Missing file or directory path."
-                    : "One file or directory path expected.");
+                Console.WriteLine("One file or directory path expected. Optional switch: -SUMMARY");
                 return;
             }
-
-            var path = args[0];
 
             if (Directory.Exists(path))
             {
                 var summaryPath = Path.Combine(path, "summary.txt");
+                var paths = Directory.GetFiles(path, "*.csv")
+                    .Where(p => !Path.GetFileName(p).EndsWith(".calc.csv", StringComparison.OrdinalIgnoreCase));
                 using (var summaryWriter = new StreamWriter(summaryPath, false))
-                    foreach (var file in Directory.GetFiles(path, "*.csv"))
-                        ProcessFile(file, summaryWriter);
+                    foreach (var file in paths)
+                        ProcessFile(file, summary, summaryWriter);
                 return;
             }
 
             if (File.Exists(path))
             {
-                ProcessFile(path);
+                ProcessFile(path, summary);
                 return;
             }
 
             Console.WriteLine("File or directory does not exist: " + path);
         }
 
-        static void ProcessFile(string path, StreamWriter summaryWriter = null)
+        static void ProcessFile(string path, bool summaryOnly, StreamWriter summaryWriter = null)
         {
             var fileName = Path.GetFileName(path);
             string nameSuffix;
@@ -58,47 +59,63 @@ namespace SNBCalc
             Console.WriteLine("Processing " + fileName);
 
             var detector = new BenchmarkEndPointCalculator();
-            var outPath = Path.Combine(Path.GetDirectoryName(path), "calc_" + fileName);
 
-            using (var writer = new StreamWriter(outPath, false))
-            using (var reader = new StreamReader(path))
+            StreamWriter writer = null;
+            if (!summaryOnly)
             {
-                string headLine;
-                string line;
-                while ((headLine = reader.ReadLine()) != null)
+                var outPath = Path.Combine(Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(fileName) + ".calc.csv");
+                writer = new StreamWriter(outPath, false);
+            }
+
+            try
+            {
+                using (var reader = new StreamReader(path))
                 {
-                    if (headLine.StartsWith("Pcount;"))
-                        break;
-                }
-
-                if (headLine == null)
-                {
-                    Console.WriteLine("Headline not found.");
-                    return;
-                }
-
-                writer.WriteLine("sep=;");
-                headLine += ";;Pcount;Req/sec;InputAvg;DiffAvg;Trigger";
-                writer.WriteLine(headLine);
-
-                var triggered = false;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    if (line.StartsWith("BENCHMARK RESULT:"))
-                        break;
-
-                    bool trigger;
-                    var detected = detector.Detect(line, out trigger);
-                    writer.WriteLine(line + ";" + detected);
-
-                    if (trigger && !triggered)
+                    string headLine;
+                    string line;
+                    while ((headLine = reader.ReadLine()) != null)
                     {
-                        triggered = true;
-                        var summaryRecord = GetSummaryRecord(name, nameSuffix, detected);
-                        Console.WriteLine("    " + summaryRecord);
-                        summaryWriter?.WriteLine(summaryRecord);
+                        if (headLine.StartsWith("Pcount;"))
+                            break;
+                    }
+
+                    if (headLine == null)
+                    {
+                        Console.WriteLine("Headline not found.");
+                        return;
+                    }
+
+                    if (!summaryOnly)
+                    {
+                        writer.WriteLine("\"sep=;\"");
+                        headLine += ";;Pcount;Req/sec;InputAvg;DiffAvg;Trigger";
+                        writer.WriteLine(headLine);
+                    }
+
+                    var triggered = false;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        if (line.StartsWith("BENCHMARK RESULT:"))
+                            break;
+
+                        bool trigger;
+                        var detected = detector.Detect(line, out trigger);
+                        if (!summaryOnly)
+                            writer.WriteLine(line + ";" + detected);
+
+                        if (trigger && !triggered)
+                        {
+                            triggered = true;
+                            var summaryRecord = GetSummaryRecord(name, nameSuffix, detected);
+                            Console.WriteLine("    " + summaryRecord);
+                            summaryWriter?.WriteLine(summaryRecord);
+                        }
                     }
                 }
+            }
+            finally
+            {
+                writer?.Dispose();
             }
         }
 
