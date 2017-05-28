@@ -95,8 +95,6 @@ namespace SnBenchmark
             {
                 for (var i = 0; i < this.Actions.Count; i++)
                 {
-                    if (!_running)
-                        break;
                     try
                     {
                         await this.Actions[i].ExecuteAsync(this, "P" + this.Id + "A" + i + "x");
@@ -106,6 +104,9 @@ namespace SnBenchmark
                         Program.AddError(e, this, i, this.Actions[i]);
                     }
                 }
+
+                if (!_running)
+                    break;
             }
             Program.StoppedProfiles++;
         }
