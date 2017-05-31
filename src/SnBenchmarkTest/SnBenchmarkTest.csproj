@@ -69,6 +69,9 @@
   </Choose>
   <ItemGroup>
     <Compile Include="ArgumentTests.cs" />
+    <Compile Include="LoadControl\NoiseFilter.cs" />
+    <Compile Include="LoadControl\WebServerSimulator.cs" />
+    <Compile Include="LoadControl\WebServerSimulatorTests.cs" />
     <Compile Include="PathSetTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestWebAccess.cs" />
@@ -78,6 +81,10 @@
     <ProjectReference Include="..\SnBenchmark\SnBenchmark.csproj">
       <Project>{52e34237-7594-420f-801a-fddc1a07ef43}</Project>
       <Name>SnBenchmark</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Tools\SNBCalc\SNBCalc.csproj">
+      <Project>{81983a89-99f3-4d50-8776-0f72c414c56c}</Project>
+      <Name>SNBCalc</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
