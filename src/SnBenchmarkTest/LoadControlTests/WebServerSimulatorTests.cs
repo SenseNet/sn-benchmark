@@ -29,34 +29,35 @@ namespace SnBenchmarkTest.LoadControlTests
         public void TestMethod2()
         {
             var server = new WebServerSimulator(50, 100);
-            var epc = new BenchmarkEndPointCalculator();
-            var controller = new LoadController();
+            var loadController = new LoadController();
+
             var profiles = 10;
             var growingProfiles = 4;
-            while (true)
+            var exit = false;
+            while (!exit)
             {
-                var detected = false;
-                for (int iteration = 0; iteration < 30; iteration++)
-                {
-                    var reqPerSec = server.GetRequestPerSec(profiles);
-                    controller.Progress(reqPerSec);
-                    detected = epc.Detect(reqPerSec);
-                    var filteredValue = epc.FilteredRequestsPerSec;
-                    Debug.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", profiles, reqPerSec, filteredValue, epc.CurrentValue * 200, detected ? 0 : 100);
-                }
-                var loadControl = controller.Next();
+                var reqPerSec = server.GetRequestPerSec(profiles);
+                loadController.Progress(reqPerSec, profiles);
+                var filteredValue = loadController.FilteredRequestsPerSec;
+                var diffValue = loadController.DiffValue;
+                Debug.WriteLine("{0}\t{1}\t{2}\t{3}", profiles, reqPerSec, filteredValue, diffValue * 200);
+
+                var loadControl = loadController.Next();
                 switch (loadControl)
                 {
                     case LoadControl.Stay:
                         break;
+                    case LoadControl.Exit:
+                        exit = true;
+                        break;
                     case LoadControl.Increase:
+                        profiles += growingProfiles;
                         break;
                     case LoadControl.Decrease:
-                        break;
-                    case LoadControl.Exit:
+                        profiles -= growingProfiles;
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException("Unknown load control: " + loadControl);
                 }
             }
         }
