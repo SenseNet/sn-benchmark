@@ -182,7 +182,7 @@ namespace SnBenchmark
         }
 
         private static readonly List<Profile> RunningProfiles = new List<Profile>();
-        private static MaxPerformanceDetector _endPointDetector; //UNDONE: rename _endPointDetector
+        private static MaxPerformanceDetector _maxPerformanceDetector;
         private static int _endPointDetected;
         private static System.Timers.Timer _timer;
         public static int StoppedProfiles { get; set; }
@@ -211,7 +211,7 @@ namespace SnBenchmark
 
         private static async Task Run(List<Profile> initialProfiles, List<Profile> growingProfiles)
         {
-            _endPointDetector = new MaxPerformanceDetector();
+            _maxPerformanceDetector = new MaxPerformanceDetector();
 
             _timer = new System.Timers.Timer(1000.0);
             _timer.Elapsed += Timer_Elapsed;
@@ -402,13 +402,13 @@ namespace SnBenchmark
         private static void Monitor(string consoleMessage = null)
         {
             var requestsPerSec = Web.RequestsPerSec;
-            var endpointDetected = _endPointDetector.Detect(requestsPerSec);
+            var endpointDetected = _maxPerformanceDetector.Detect(requestsPerSec);
             if (endpointDetected)
                 _endPointDetected++;
 
             var logLine = $"{RunningProfiles.Count - StoppedProfiles}\t{Web.ActiveRequests}\t{Web.RequestsPerSec}\t" +
-                $"{_endPointDetector.FilteredRequestsPerSec}\t" +
-                $"{_endPointDetector.CurrentValue * 100}\t" +
+                $"{_maxPerformanceDetector.FilteredRequestsPerSec}\t" +
+                $"{_maxPerformanceDetector.CurrentValue * 100}\t" +
                 $"{(endpointDetected ? 100 : 0)}\t" +
                 $"{string.Join("\t", _periodData.Values.Select(d => d.ToString("0.00")).ToArray())}\t" + 
                 $"{string.Join("\t", _limits.Values.Select(d => d.ToString("0.00")).ToArray())}\t{(Pausing ? "pause" : "")}";                                                           // 5
@@ -426,7 +426,7 @@ namespace SnBenchmark
                 if (consoleMessage != null)
                 {
                     var msg = $"{RunningProfiles.Count - StoppedProfiles}\t{Web.ActiveRequests}\t" +
-                              $"{_endPointDetector.FilteredRequestsPerSec,7}\t"; //+
+                              $"{_maxPerformanceDetector.FilteredRequestsPerSec,7}\t"; //+
                         //$"{string.Join("\t", _periodData.Values.Select(d => d.ToString("0.00")).ToArray())}";
 
                     Console.WriteLine();

@@ -7,36 +7,52 @@ using System.Threading.Tasks;
 
 namespace SnBenchmark
 {
-    public enum LoadControl {Stay, Increase, Decrease, Exit}
-    public class LoadController
+    public enum LoadControl { Stay, Increase, Decrease, Exit }
+    public abstract class LoadController
     {
-        private enum State { Initial, Growing, MaxDetected, Decreasing, Increasing };
-        private State _state = State.Initial;
-        private int _counter;
-        private readonly int _growingCounterMax = 30;
+        protected enum State { Initial, Growing, MaxDetected, Decreasing, Increasing };
+        protected State _state = State.Initial;
 
-        readonly MaxPerformanceDetector _endpointCalc = new MaxPerformanceDetector(); //UNDONE: rename _endpointCalc
-        private bool _firstMaxPerformanceDetected;
-        private int _profilesWhenFirstMaxPerformanceDetected;
-        public double FilteredRequestsPerSec => _endpointCalc.FilteredRequestsPerSec;
-        public double DiffValue => _endpointCalc.CurrentValue;
+        protected int _counter;
+        protected readonly int _growingCounterMax = 30;
+
+        protected readonly MaxPerformanceDetector _maxPerformanceDetector= new MaxPerformanceDetector();
+
+        protected bool _firstMaxPerformanceDetected;
+        protected int _profilesWhenFirstMaxPerformanceDetected;
+
+        public double FilteredRequestsPerSec => _maxPerformanceDetector.FilteredRequestsPerSec;
+        public double DiffValue => _maxPerformanceDetector.CurrentValue;
 
         public void Progress(int requestsPerSec, int countOfRunningProfiles)
         {
             _counter++;
-            if (_endpointCalc.Detect(requestsPerSec))
+            if (_maxPerformanceDetector.Detect(requestsPerSec))
             {
                 _firstMaxPerformanceDetected = true;
                 _profilesWhenFirstMaxPerformanceDetected = countOfRunningProfiles;
             }
         }
-        public LoadControl Next()
+
+        public abstract LoadControl Next();
+    }
+
+    public class SustainPerformanceLoadController : LoadController
+    {
+        private readonly int _sustainCounterMax;
+
+        public SustainPerformanceLoadController(int sustainInSec)
+        {
+            _sustainCounterMax = sustainInSec;
+        }
+
+        public override LoadControl Next()
         {
             switch (_state)
             {
                 case State.Initial:
                     _counter = 0;
-                    _state=State.Growing;
+                    _state = State.Growing;
                     return LoadControl.Stay;
                 case State.Growing:
                     if (_counter < _growingCounterMax)
@@ -47,19 +63,88 @@ namespace SnBenchmark
                     _state = State.MaxDetected;
                     return LoadControl.Stay;
                 case State.MaxDetected:
-                    if (_counter < 200)
+                    if (_counter < _sustainCounterMax)
                         return LoadControl.Stay;
                     return LoadControl.Exit;
-                case State.Decreasing:
-                    break;
-                case State.Increasing:
-                    break;
                 default:
                     throw new ArgumentOutOfRangeException("Unknown state: " + _state);
             }
-            // ???
+        }
+    }
 
-            return LoadControl.Stay;
+    public class SawToothLoadController : LoadController
+    {
+        protected bool _sawToothStartsWithDecrement;
+
+        protected int _incStepMax = 5;
+        protected int _decStepMax;
+        protected int _sustainCounterMax = 200;
+        protected int _sawToothCount;
+        protected int _sawToothMax = 3;
+
+        public SawToothLoadController(bool sawToothStartsWithDecrement)
+        {
+            _sawToothStartsWithDecrement = sawToothStartsWithDecrement;
+        }
+
+        public override LoadControl Next()
+        {
+            switch (_state)
+            {
+                case State.Initial:
+                    _counter = 0;
+                    _state = State.Growing;
+                    return LoadControl.Stay;
+                case State.Growing:
+                    if (_counter < _growingCounterMax)
+                        return LoadControl.Stay;
+                    _counter = 0;
+                    if (!_firstMaxPerformanceDetected)
+                        return LoadControl.Increase;
+                    _state = State.MaxDetected;
+                    return LoadControl.Stay;
+                case State.MaxDetected:
+                    if (_sawToothStartsWithDecrement)
+                    {
+                        if (_counter < 200)
+                            return LoadControl.Stay;
+                        _decStepMax = 1;
+                        _counter = 0;
+                        _state = State.Decreasing;
+                        return LoadControl.Decrease;
+                    }
+                    if (_counter < 100)
+                        return LoadControl.Stay;
+                    _counter = 0;
+                    _decStepMax = _incStepMax - 1;
+                    _state = State.Increasing;
+                    return LoadControl.Stay;
+                case State.Decreasing:
+                    if (_counter >= _decStepMax)
+                    {
+                        _counter = 0;
+                        _decStepMax = _incStepMax - 1;
+                        _state = State.Increasing;
+                        return LoadControl.Stay;
+                    }
+                    return LoadControl.Decrease;
+                case State.Increasing:
+                    var modulo = _counter % _sustainCounterMax;
+                    var incStepCount = _counter / _sustainCounterMax;
+
+                    if (incStepCount < _incStepMax)
+                        return modulo == 0 ? LoadControl.Increase : LoadControl.Stay;
+
+                    //next sawtooth
+                    _counter = 0;
+                    if (++_sawToothCount >= _sawToothMax)
+                        return LoadControl.Exit;
+                    _state = State.Decreasing;
+                    return LoadControl.Decrease;
+                default:
+                    throw new ArgumentOutOfRangeException("Unknown state: " + _state);
+            }
+            throw new InvalidOperationException();
         }
     }
 }

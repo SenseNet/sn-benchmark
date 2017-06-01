@@ -28,7 +28,79 @@ namespace SnBenchmarkTest.LoadControlTests
         public void TestMethod2()
         {
             var server = new WebServerSimulator(50, 100);
-            var loadController = new LoadController();
+            var loadController = new SustainPerformanceLoadController(600);
+
+            var profiles = 10;
+            var growingProfiles = 4;
+            var exit = false;
+            while (!exit)
+            {
+                var reqPerSec = server.GetRequestPerSec(profiles);
+                loadController.Progress(reqPerSec, profiles);
+                var filteredValue = loadController.FilteredRequestsPerSec;
+                var diffValue = loadController.DiffValue;
+                Debug.WriteLine("{0}\t{1}\t{2}\t{3}", profiles, reqPerSec, filteredValue, diffValue * 200);
+
+                var loadControl = loadController.Next();
+                switch (loadControl)
+                {
+                    case LoadControl.Stay:
+                        break;
+                    case LoadControl.Exit:
+                        exit = true;
+                        break;
+                    case LoadControl.Increase:
+                        profiles += growingProfiles;
+                        break;
+                    case LoadControl.Decrease:
+                        profiles -= growingProfiles;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("Unknown load control: " + loadControl);
+                }
+            }
+        }
+        [TestMethod]
+        public void TestMethod3()
+        {
+            var server = new WebServerSimulator(50, 100);
+            var loadController = new SawToothLoadController(true);
+
+            var profiles = 10;
+            var growingProfiles = 4;
+            var exit = false;
+            while (!exit)
+            {
+                var reqPerSec = server.GetRequestPerSec(profiles);
+                loadController.Progress(reqPerSec, profiles);
+                var filteredValue = loadController.FilteredRequestsPerSec;
+                var diffValue = loadController.DiffValue;
+                Debug.WriteLine("{0}\t{1}\t{2}\t{3}", profiles, reqPerSec, filteredValue, diffValue * 200);
+
+                var loadControl = loadController.Next();
+                switch (loadControl)
+                {
+                    case LoadControl.Stay:
+                        break;
+                    case LoadControl.Exit:
+                        exit = true;
+                        break;
+                    case LoadControl.Increase:
+                        profiles += growingProfiles;
+                        break;
+                    case LoadControl.Decrease:
+                        profiles -= growingProfiles;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("Unknown load control: " + loadControl);
+                }
+            }
+        }
+        [TestMethod]
+        public void TestMethod4()
+        {
+            var server = new WebServerSimulator(50, 100);
+            var loadController = new SawToothLoadController(false);
 
             var profiles = 10;
             var growingProfiles = 4;
