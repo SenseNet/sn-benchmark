@@ -72,6 +72,7 @@
     <Compile Include="Expression\VariableExpression.cs" />
     <Compile Include="Expression\WaitExpression.cs" />
     <Compile Include="IWebAccess.cs" />
+    <Compile Include="LoadController.cs" />
     <Compile Include="Parser\Lexer.cs" />
     <Compile Include="Parser\Token.cs" />
     <Compile Include="PathSet.cs" />
