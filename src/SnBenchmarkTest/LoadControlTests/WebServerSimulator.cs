@@ -9,7 +9,7 @@ using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 
-namespace SnBenchmarkTest.LoadControl
+namespace SnBenchmarkTest.LoadControlTests
 {
     internal class WebServerSimulator
     {

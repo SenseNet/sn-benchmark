@@ -4,7 +4,7 @@ using System.Diagnostics;
 using SnBenchmark;
 using SNBCalc;
 
-namespace SnBenchmarkTest.LoadControl
+namespace SnBenchmarkTest.LoadControlTests
 {
     [TestClass]
     public class WebServerSimulatorTests
