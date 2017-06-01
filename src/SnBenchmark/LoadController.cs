@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using SNBCalc;
 
 namespace SnBenchmark
 {
@@ -16,7 +15,7 @@ namespace SnBenchmark
         private int _counter;
         private readonly int _growingCounterMax = 30;
 
-        readonly BenchmarkEndPointCalculator _endpointCalc = new BenchmarkEndPointCalculator();
+        readonly MaxPerformanceDetector _endpointCalc = new MaxPerformanceDetector(); //UNDONE: rename _endpointCalc
         private bool _firstMaxPerformanceDetected;
         private int _profilesWhenFirstMaxPerformanceDetected;
         public double FilteredRequestsPerSec => _endpointCalc.FilteredRequestsPerSec;

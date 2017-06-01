@@ -2,7 +2,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
 using SnBenchmark;
-using SNBCalc;
 
 namespace SnBenchmarkTest.LoadControlTests
 {
@@ -13,15 +12,15 @@ namespace SnBenchmarkTest.LoadControlTests
         public void TestMethod1()
         {
             var server = new WebServerSimulator(40, 100);
-            var epc = new BenchmarkEndPointCalculator();
+            var mpd = new MaxPerformanceDetector();
             for (var profiles = 1; profiles < 60; profiles++)
             {
                 for (int iteration = 0; iteration < 50; iteration++)
                 {
                     var reqPerSec = server.GetRequestPerSec(profiles + 1);
-                    var detected = epc.Detect(reqPerSec) ? 1 : 0;
-                    var filteredValue = epc.FilteredRequestsPerSec;
-                    Debug.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", profiles, reqPerSec, filteredValue, epc.CurrentValue * 200, detected * 100);
+                    var detected = mpd.Detect(reqPerSec) ? 1 : 0;
+                    var filteredValue = mpd.FilteredRequestsPerSec;
+                    Debug.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}", profiles, reqPerSec, filteredValue, mpd.CurrentValue * 200, detected * 100);
                 }
             }
         }

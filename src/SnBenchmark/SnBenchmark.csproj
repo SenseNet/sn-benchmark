@@ -73,6 +73,8 @@
     <Compile Include="Expression\WaitExpression.cs" />
     <Compile Include="IWebAccess.cs" />
     <Compile Include="LoadController.cs" />
+    <Compile Include="MaxPerformanceDetector.cs" />
+    <Compile Include="NoiseFilter.cs" />
     <Compile Include="Parser\Lexer.cs" />
     <Compile Include="Parser\Token.cs" />
     <Compile Include="PathSet.cs" />
@@ -96,12 +98,6 @@
   <ItemGroup>
     <Content Include="Profiles\Editor.txt" />
     <Content Include="Profiles\Visitor.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Tools\SNBCalc\SNBCalc.csproj">
-      <Project>{81983a89-99f3-4d50-8776-0f72c414c56c}</Project>
-      <Name>SNBCalc</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

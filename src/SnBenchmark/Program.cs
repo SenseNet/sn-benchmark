@@ -8,7 +8,6 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using SenseNet.Tools.CommandLineArguments;
-using SNBCalc;
 
 namespace SnBenchmark
 {
@@ -183,7 +182,7 @@ namespace SnBenchmark
         }
 
         private static readonly List<Profile> RunningProfiles = new List<Profile>();
-        private static BenchmarkEndPointCalculator _endPointDetector;
+        private static MaxPerformanceDetector _endPointDetector; //UNDONE: rename _endPointDetector
         private static int _endPointDetected;
         private static System.Timers.Timer _timer;
         public static int StoppedProfiles { get; set; }
@@ -212,7 +211,7 @@ namespace SnBenchmark
 
         private static async Task Run(List<Profile> initialProfiles, List<Profile> growingProfiles)
         {
-            _endPointDetector = new BenchmarkEndPointCalculator();
+            _endPointDetector = new MaxPerformanceDetector();
 
             _timer = new System.Timers.Timer(1000.0);
             _timer.Elapsed += Timer_Elapsed;

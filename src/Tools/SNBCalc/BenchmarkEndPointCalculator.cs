@@ -1,6 +1,6 @@
 ﻿namespace SNBCalc
 {
-    public class BenchmarkEndPointCalculator
+    internal class BenchmarkEndPointCalculator
     {
         private readonly NoiseFilter<int> _inputFilter = new NoiseFilter<int>(100);
         private readonly NoiseFilter<double> _diffFilter = new NoiseFilter<double>(50);
