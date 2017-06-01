@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -7,6 +8,13 @@ using System.Threading.Tasks;
 
 namespace SnBenchmark
 {
+    [DebuggerDisplay("{Profiles}\t{AverageRequestsPerSec}")]
+    public class PerformanceRecord
+    {
+        public double AverageRequestsPerSec { get; set; }
+        public int Profiles { get; set; }
+    }
+
     public enum LoadControl { Stay, Increase, Decrease, Exit }
     public abstract class LoadController
     {
@@ -17,9 +25,8 @@ namespace SnBenchmark
         protected readonly int _growingCounterMax = 30;
 
         protected readonly MaxPerformanceDetector _maxPerformanceDetector= new MaxPerformanceDetector();
-
-        protected bool _firstMaxPerformanceDetected;
-        protected int _profilesWhenFirstMaxPerformanceDetected;
+        protected List<PerformanceRecord> _performanceTopValues = new List<PerformanceRecord>();
+        public bool TopValueDetected { get; private set; }
 
         public double FilteredRequestsPerSec => _maxPerformanceDetector.FilteredRequestsPerSec;
         public double DiffValue => _maxPerformanceDetector.CurrentValue;
@@ -27,10 +34,14 @@ namespace SnBenchmark
         public void Progress(int requestsPerSec, int countOfRunningProfiles)
         {
             _counter++;
-            if (_maxPerformanceDetector.Detect(requestsPerSec))
+            // ReSharper disable once RedundantBoolCompare
+            if ((TopValueDetected = _maxPerformanceDetector.Detect(requestsPerSec)) == true)
             {
-                _firstMaxPerformanceDetected = true;
-                _profilesWhenFirstMaxPerformanceDetected = countOfRunningProfiles;
+                _performanceTopValues.Add(new PerformanceRecord
+                {
+                    AverageRequestsPerSec = _maxPerformanceDetector.FilteredRequestsPerSec,
+                    Profiles = countOfRunningProfiles
+                });
             }
         }
 
@@ -58,7 +69,7 @@ namespace SnBenchmark
                     if (_counter < _growingCounterMax)
                         return LoadControl.Stay;
                     _counter = 0;
-                    if (!_firstMaxPerformanceDetected)
+                    if (_performanceTopValues.Count == 0)
                         return LoadControl.Increase;
                     _state = State.MaxDetected;
                     return LoadControl.Stay;
@@ -99,7 +110,7 @@ namespace SnBenchmark
                     if (_counter < _growingCounterMax)
                         return LoadControl.Stay;
                     _counter = 0;
-                    if (!_firstMaxPerformanceDetected)
+                    if (_performanceTopValues.Count == 0)
                         return LoadControl.Increase;
                     _state = State.MaxDetected;
                     return LoadControl.Stay;
