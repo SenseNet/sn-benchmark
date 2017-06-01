@@ -7,7 +7,8 @@
         private int trigger = 10;
         private int _continuousNegative;
 
-        public double CurrentValue { get; private  set; }
+        public double CurrentValue { get; private set; }
+        public double FilteredRequestsPerSec { get; private set; }
 
         public string Detect(string line, out bool reached)
         {
@@ -19,6 +20,7 @@
 
             var lastFilteredInput = _inputFilter.FilteredValue;
             var filteredInput = _inputFilter.NextValue(dataLine.RequestsPerSec);
+            FilteredRequestsPerSec = filteredInput;
 
             var diff = filteredInput - lastFilteredInput;
 
@@ -35,6 +37,7 @@
         {
             var lastFilteredInput = _inputFilter.FilteredValue;
             var filteredInput = _inputFilter.NextValue(requestsPerSec);
+            FilteredRequestsPerSec = filteredInput;
 
             var diff = filteredInput - lastFilteredInput;
 

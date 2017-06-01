@@ -20,7 +20,7 @@ namespace SnBenchmark
 
         private static void Main(string[] args)
         {
-            ServicePointManager.DefaultConnectionLimit = 300;
+            ServicePointManager.DefaultConnectionLimit = 1500;
 
             _configuration = new Configuration();
 
@@ -237,10 +237,18 @@ namespace SnBenchmark
 
             // start more profiles periodically, while the terminating conditions are not fulfilled
             var exit = false;
-            while (!boundaryConditionHaveBeenFulfilled)
+
+            while (true)
             {
-                AddAndStartProfiles(growingProfiles);
-                Monitor("---- GROWING ");
+                if (!boundaryConditionHaveBeenFulfilled)
+                {
+                    AddAndStartProfiles(growingProfiles);
+                    Monitor("---- GROWING ");
+                }
+                else
+                {
+                    Monitor("---- STAYING ");
+                }
 
                 for (int i = 0; i < 100; i++)
                 {
@@ -252,13 +260,18 @@ namespace SnBenchmark
                             exit = true;
                             break;
                         }
+                        if (key.KeyChar == 'g')
+                        {
+                            AddAndStartProfiles(growingProfiles);
+                            Monitor("---- GROWING ");
+                        }
                     }
                     await Task.Delay(_configuration.GrowingTime * 10);
                 }
                 if (exit)
                     break;
 
-                boundaryConditionHaveBeenFulfilled = CheckBoundaryConditions(_limits);
+                boundaryConditionHaveBeenFulfilled |= CheckBoundaryConditions(_limits);
             }
 
             if(exit)
@@ -373,15 +386,15 @@ namespace SnBenchmark
             var speeds = speedItems.ToArray();
             if (_configuration.Verbose)
             {
-                Console.WriteLine("Pcount\tActive\tReq/sec\tEPDout\tTriggered\t" + string.Join("\t", speeds) + "\t" + string.Join("\t", speeds.Select(i => "L" + i.ToLower())));
+                Console.WriteLine("Pcount\tActive\tReq/sec\tAVGr/s\tEPDout\tTriggered\t" + string.Join("\t", speeds) + "\t" + string.Join("\t", speeds.Select(i => "L" + i.ToLower())));
             }
             else
             {
-                Console.WriteLine("Pcount\tActive\t" + string.Join("\t", speeds));
-                Console.WriteLine("\t\t" + string.Join("\t", _limits.Values.Select(d => d.ToString("0.00")).ToArray()));
+                Console.WriteLine("Pcount\tActive\tAVGr/s\t" /*+ string.Join("\t", speeds)*/);
+                //Console.WriteLine("\t\t\t" + string.Join("\t", _limits.Values.Select(d => d.ToString("0.00")).ToArray()));
             }
 
-            var outputHead = "Pcount;Active;Req/sec;EPDout;Triggered;" + string.Join(";", speeds) + ";" + string.Join(";", speeds.Select(i => "L" + i.ToLower()));
+            var outputHead = "Pcount;Active;Req/sec;AVGr/s;EPDout;Triggered;" + string.Join(";", speeds) + ";" + string.Join(";", speeds.Select(i => "L" + i.ToLower()));
 
             WriteToOutputFile(outputHead);
         }
@@ -395,6 +408,7 @@ namespace SnBenchmark
                 _endPointDetected++;
 
             var logLine = $"{RunningProfiles.Count - StoppedProfiles}\t{Web.ActiveRequests}\t{Web.RequestsPerSec}\t" +
+                $"{_endPointDetector.FilteredRequestsPerSec}\t" +
                 $"{_endPointDetector.CurrentValue * 100}\t" +
                 $"{(endpointDetected ? 100 : 0)}\t" +
                 $"{string.Join("\t", _periodData.Values.Select(d => d.ToString("0.00")).ToArray())}\t" + 
@@ -412,8 +426,9 @@ namespace SnBenchmark
             {
                 if (consoleMessage != null)
                 {
-                    var msg = $"{RunningProfiles.Count - StoppedProfiles}\t{Web.ActiveRequests}\t" + 
-                        $"{string.Join("\t", _periodData.Values.Select(d => d.ToString("0.00")).ToArray())}";
+                    var msg = $"{RunningProfiles.Count - StoppedProfiles}\t{Web.ActiveRequests}\t" +
+                              $"{_endPointDetector.FilteredRequestsPerSec,7}\t"; //+
+                        //$"{string.Join("\t", _periodData.Values.Select(d => d.ToString("0.00")).ToArray())}";
 
                     Console.WriteLine();
                     Console.Write(msg);

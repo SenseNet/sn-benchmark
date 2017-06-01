@@ -56,7 +56,6 @@ namespace SnBenchmark
             var startTime = DateTime.UtcNow;
             Interlocked.Increment(ref _activeRequests);
             _allRequests++;
-            _requestsPerSec++;
 
             var method = new HttpMethod(httpMethod);
 
@@ -66,6 +65,7 @@ namespace SnBenchmark
                 var data = requestBody?.Length > 100 ? requestBody.Substring(0, 100) + "..." : requestBody;
                 LogRequest(data == null ? $"{httpMethod} {url}" : $"{httpMethod} {url} | {data}");
                 responseString = await RESTCaller.GetResponseStringAsync(new Uri(url), server, method, requestBody);
+                _requestsPerSec++;
             }
             finally
             {
