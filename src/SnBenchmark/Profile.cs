@@ -68,6 +68,7 @@ namespace SnBenchmark
         /// </summary>
         /// <param name="name">Name of the profile.</param>
         /// <param name="src">Profile definition script.</param>
+        /// <param name="location">Path of the container filesystem directory.</param>
         /// <param name="speedItems">List of response limit names.</param>
         /// <returns>A fully initialized profile object.</returns>
         public static Profile Parse(string name, string src, string location, List<string> speedItems)

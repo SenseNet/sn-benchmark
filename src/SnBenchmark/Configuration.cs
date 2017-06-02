@@ -235,7 +235,9 @@ namespace SnBenchmark
         }
         private static string GetResponsesDirectoryPath(string outputFile)
         {
-            return Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile));
+            if (outputFile == null)
+                throw new ArgumentNullException(nameof(outputFile));
+            return Path.Combine(Path.GetDirectoryName(outputFile) ?? "", Path.GetFileNameWithoutExtension(outputFile));
         }
     }
 }

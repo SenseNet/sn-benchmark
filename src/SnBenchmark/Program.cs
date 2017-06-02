@@ -273,7 +273,7 @@ namespace SnBenchmark
                 boundaryConditionHaveBeenFulfilled |= CheckBoundaryConditions(_limits);
             }
 
-            if(exit)
+            //if(exit)
                 Console.WriteLine("Interrupted with EXIT key.");
 
             var benchmarkResult = "BENCHMARK RESULT: " + (_lastBenchmarkResult ?? _benchmarkResult) + " Total errors: " + (_errorCountInWarmup + _errorCount);
