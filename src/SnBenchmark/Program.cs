@@ -235,6 +235,7 @@ namespace SnBenchmark
 
             Console.WriteLine("================= MEASUREMENT  Press <x> to exit");
 
+            Web.RequestsPerSec = 0;
             _mainState = MainState.Measuring;
             _loadController = new ProfileFinderLoadController();
 
