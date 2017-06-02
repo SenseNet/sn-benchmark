@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
 using SnBenchmark;
@@ -78,5 +79,62 @@ namespace SnBenchmarkTest.LoadControlTests
                 }
             }
         }
+
+        [TestMethod]
+        public void WebServerSimulator_ProfileFinderLoadController()
+        {
+            var result = new List<PerformanceRecord>();
+            for (int i = 0; i < 20; i++)
+            {
+                var loadController = new ProfileFinderLoadController();
+                TestLoadController(new WebServerSimulator(50, 60), loadController, 10, 1, false);
+                result.Add(loadController.Result);
+            }
+        }
+        [TestMethod]
+        public void WebServerSimulator_ProfileFinderLoadController_Trace()
+        {
+            var loadController = new ProfileFinderLoadController();
+            TestLoadController(new WebServerSimulator(50, 60), loadController, 10, 1, true);
+            var result = loadController.Result;
+        }
+        private void TestLoadController(WebServerSimulator server, ProfileFinderLoadController loadController, int profiles, int growth, bool trace)
+        {
+            var exit = false;
+
+            if (trace)
+                Debug.WriteLine("Trigger\tr/s\tAVGr/s\tMPD\tProfiles\tTrace");
+
+            while (!exit)
+            {
+                var reqPerSec = server.GetRequestPerSec(profiles);
+                loadController.Progress(reqPerSec, profiles);
+                var filteredValue = loadController.FilteredRequestsPerSec;
+                var diffValue = loadController.DiffValue;
+                var detected = loadController.TopValueDetected ? 1 : 0;
+
+                if(trace)
+                    Debug.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}", detected * 100, reqPerSec, filteredValue, diffValue * 200, profiles, loadController.Trace);
+
+                var loadControl = loadController.Next();
+                switch (loadControl)
+                {
+                    case LoadControl.Stay:
+                        break;
+                    case LoadControl.Exit:
+                        exit = true;
+                        break;
+                    case LoadControl.Increase:
+                        profiles += growth;
+                        break;
+                    case LoadControl.Decrease:
+                        profiles -= growth;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("Unknown load control: " + loadControl);
+                }
+            }
+        }
+
     }
 }

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace SnBenchmark
 {
-    [DebuggerDisplay("{Profiles}\t{AverageRequestsPerSec}")]
+    [DebuggerDisplay("{Profiles}, {AverageRequestsPerSec}")]
     public class PerformanceRecord
     {
         public double AverageRequestsPerSec { get; set; }
@@ -23,6 +23,7 @@ namespace SnBenchmark
 
         protected int _counter;
         protected readonly int _growingCounterMax = 30;
+        protected int _countOfRunningProfiles;
 
         protected readonly MaxPerformanceDetector _maxPerformanceDetector= new MaxPerformanceDetector();
         protected List<PerformanceRecord> _performanceTopValues = new List<PerformanceRecord>();
@@ -31,9 +32,10 @@ namespace SnBenchmark
         public double FilteredRequestsPerSec => _maxPerformanceDetector.FilteredRequestsPerSec;
         public double DiffValue => _maxPerformanceDetector.CurrentValue;
 
-        public void Progress(int requestsPerSec, int countOfRunningProfiles)
+        public virtual void Progress(int requestsPerSec, int countOfRunningProfiles)
         {
             _counter++;
+            _countOfRunningProfiles = countOfRunningProfiles;
             // ReSharper disable once RedundantBoolCompare
             if ((TopValueDetected = _maxPerformanceDetector.Detect(requestsPerSec)) == true)
             {
@@ -152,6 +154,81 @@ namespace SnBenchmark
                         return LoadControl.Exit;
                     _state = State.Decreasing;
                     return LoadControl.Decrease;
+                default:
+                    throw new ArgumentOutOfRangeException("Unknown state: " + _state);
+            }
+            throw new InvalidOperationException();
+        }
+    }
+
+    public class ProfileFinderLoadController : LoadController
+    {
+        private int _sustainCounterMax = 400;
+        private double _performanceDeltaTrigger = 5.0;
+        private int _incStepMax = 2;
+        private readonly NoiseFilter _rpsFilter = new NoiseFilter(200);
+        public readonly List<PerformanceRecord> AveragePerformanceHistory = new List<PerformanceRecord>();
+        public double MaxPerformance { get; private set; }
+
+        public PerformanceRecord Result { get; private set; }
+        public double Trace =>  _rpsFilter.FilteredValue;
+
+        public override void Progress(int requestsPerSec, int countOfRunningProfiles)
+        {
+            base.Progress(requestsPerSec, countOfRunningProfiles);
+            _rpsFilter.NextValue(_maxPerformanceDetector.FilteredRequestsPerSec);
+        }
+
+        public override LoadControl Next()
+        {
+            switch (_state)
+            {
+                case State.Initial:
+                    _counter = 0;
+                    _state = State.Growing;
+                    return LoadControl.Stay;
+                case State.Growing:
+                    if (_counter < _growingCounterMax)
+                        return LoadControl.Stay;
+                    _counter = 0;
+                    if (_performanceTopValues.Count == 0)
+                        return LoadControl.Increase;
+                    _state = State.MaxDetected;
+                    return LoadControl.Stay;
+                case State.MaxDetected:
+                    if (_counter < _growingCounterMax * 2)
+                        return LoadControl.Stay;
+                    _counter = 0;
+                    _state = State.Increasing;
+                    return LoadControl.Increase;
+                case State.Increasing:
+                    var currentAvg = _rpsFilter.FilteredValue;
+                    var modulo = _counter % (_growingCounterMax * 4);
+                    var incStepCount = _counter / (_growingCounterMax * 4);
+                    if (incStepCount < _incStepMax)
+                    {
+                        if( modulo > 0 )
+                            return LoadControl.Stay;
+                        AveragePerformanceHistory.Add(new PerformanceRecord {AverageRequestsPerSec = currentAvg, Profiles = _countOfRunningProfiles});
+                        return LoadControl.Increase;
+                    }
+                    AveragePerformanceHistory.Add(new PerformanceRecord { AverageRequestsPerSec = currentAvg, Profiles = _countOfRunningProfiles });
+                    MaxPerformance = AveragePerformanceHistory.Max(x => x.AverageRequestsPerSec);
+                    _counter = -1;
+                    _state = State.Decreasing;
+                    return LoadControl.Stay;
+                case State.Decreasing:
+                    modulo = _counter % _sustainCounterMax;
+                    //incStepCount = _counter / _sustainCounterMax;
+                    currentAvg = _rpsFilter.FilteredValue;
+                    if (modulo > 0)
+                        return LoadControl.Stay;
+                    var last = AveragePerformanceHistory[AveragePerformanceHistory.Count - 1];
+                    AveragePerformanceHistory.Add(new PerformanceRecord { AverageRequestsPerSec = currentAvg, Profiles = _countOfRunningProfiles });
+                    if (MaxPerformance - currentAvg < _performanceDeltaTrigger)
+                        return LoadControl.Decrease;
+                    Result = last;
+                    return LoadControl.Exit;
                 default:
                     throw new ArgumentOutOfRangeException("Unknown state: " + _state);
             }
