@@ -181,11 +181,13 @@ namespace SnBenchmark
         /// </summary>
         public int MaxErrors { get; private set; } = 10;
 
-        /// <summary>
-        /// Indicates whether the tool should write detailed information to the console.
-        /// </summary>
-        [CommandLineArgument(name: "Verbose", required: false, aliases: "V", helpText: "Verbose console")]
-        public bool Verbose { get; set; }
+        //UNDONE: Remove Pausing feature from documentation if exists
+        //UNDONE: Remove Verbose argument from documentation
+        ///// <summary>
+        ///// Indicates whether the tool should write detailed information to the console.
+        ///// </summary>
+        //[CommandLineArgument(name: "Verbose", required: false, aliases: "V", helpText: "Verbose console")]
+        //public bool Verbose { get; set; }
 
         private string _outputFileArg;
         [CommandLineArgument(name: "Output", required: false, aliases: "O,Out", helpText: "Output file for further analysis.")]

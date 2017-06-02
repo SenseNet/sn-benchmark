@@ -18,7 +18,7 @@ namespace SnBenchmark
         protected enum State { Initial, Growing, MaxDetected, Decreasing, Increasing };
         protected State ControllerState = State.Initial;
 
-        protected int Counter;
+        public int Counter { get; protected set; }
         protected readonly int GrowingCounterMax = 30;
         protected int CountOfRunningProfiles;
 
@@ -165,6 +165,7 @@ namespace SnBenchmark
         private readonly NoiseFilter _rpsFilter = new NoiseFilter(200);
         public readonly List<PerformanceRecord> AveragePerformanceHistory = new List<PerformanceRecord>();
         public double MaxPerformance { get; private set; }
+        public int ProgressValue { get; private set; }
 
         public PerformanceRecord Result { get; private set; }
         public double Trace =>  _rpsFilter.FilteredValue;
@@ -181,26 +182,32 @@ namespace SnBenchmark
             {
                 case State.Initial:
                     Counter = 0;
+                    ProgressValue = Counter;
                     ControllerState = State.Growing;
                     return LoadControl.Stay;
                 case State.Growing:
+                    ProgressValue = GrowingCounterMax - Counter;
                     if (Counter < GrowingCounterMax)
                         return LoadControl.Stay;
                     Counter = 0;
+                    ProgressValue = GrowingCounterMax - Counter;
                     if (PerformanceTopValues.Count == 0)
                         return LoadControl.Increase;
                     ControllerState = State.MaxDetected;
                     return LoadControl.Stay;
                 case State.MaxDetected:
+                    ProgressValue = GrowingCounterMax * 2 - Counter;
                     if (Counter < GrowingCounterMax * 2)
                         return LoadControl.Stay;
                     Counter = 0;
+                    ProgressValue = 0;
                     ControllerState = State.Increasing;
                     return LoadControl.Increase;
                 case State.Increasing:
                     var currentAvg = _rpsFilter.FilteredValue;
                     var modulo = Counter % (GrowingCounterMax * 4);
                     var incStepCount = Counter / (GrowingCounterMax * 4);
+                    ProgressValue = GrowingCounterMax * 4 - modulo;
                     if (incStepCount < _incStepMax)
                     {
                         if( modulo > 0 )
@@ -211,10 +218,12 @@ namespace SnBenchmark
                     AveragePerformanceHistory.Add(new PerformanceRecord { AverageRequestsPerSec = currentAvg, Profiles = CountOfRunningProfiles });
                     MaxPerformance = AveragePerformanceHistory.Max(x => x.AverageRequestsPerSec);
                     Counter = -1;
+                    ProgressValue = 0;
                     ControllerState = State.Decreasing;
                     return LoadControl.Stay;
                 case State.Decreasing:
                     modulo = Counter % _sustainCounterMax;
+                    ProgressValue = _sustainCounterMax - modulo;
                     //incStepCount = _counter / _sustainCounterMax;
                     currentAvg = _rpsFilter.FilteredValue;
                     if (modulo > 0)

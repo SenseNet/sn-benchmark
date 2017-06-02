@@ -85,14 +85,14 @@ namespace SnBenchmark
             return new Profile(this.Name, this.Location, this.Actions.Select(action => action.Clone()).ToList());
         }
 
-        private bool _running;
+        public bool Running { get; private set; }
         internal async Task ExecuteAsync()
         {
-            _running = true;
+            Running = true;
 
             await Task.Delay(RNG.Get(0, 2000));
 
-            while (_running)
+            while (Running)
             {
                 for (var i = 0; i < this.Actions.Count; i++)
                 {
@@ -106,10 +106,11 @@ namespace SnBenchmark
                     }
                 }
 
-                if (!_running)
+                if (!Running)
                     break;
             }
             Program.StoppedProfiles++;
+            Program.ProfileStopped(this);
         }
 
         internal void Test(string profileResponsesDirectory)
@@ -128,7 +129,7 @@ namespace SnBenchmark
         }
         internal void Stop()
         {
-            _running = false;
+            Running = false;
         }
 
 

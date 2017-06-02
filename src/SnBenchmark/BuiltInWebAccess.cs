@@ -49,9 +49,6 @@ namespace SnBenchmark
         /// </summary>
         public async Task<string> RequestAsync(string actionId, ServerContext server, string speedItem, string httpMethod, string url, string requestBody)
         {
-            if (Program.Pausing)
-                return null;
-
             url += (url.Contains("?") ? "&" : "?") + "benchamrkId=" + actionId;
             var startTime = DateTime.UtcNow;
             Interlocked.Increment(ref _activeRequests);
@@ -90,9 +87,6 @@ namespace SnBenchmark
         public async Task<Content> UploadAsync(string actionId, ServerContext server, string speedItem, string targetContainerPath, string fileName,
             Stream stream)
         {
-            if (Program.Pausing)
-                return null;
-
             var startTime = DateTime.UtcNow;
             Interlocked.Increment(ref _activeRequests);
             _allRequests++;
