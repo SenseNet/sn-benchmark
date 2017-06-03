@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 using SnBenchmark;
 
 namespace SnBenchmarkTest.LoadControlTests
@@ -136,5 +139,65 @@ namespace SnBenchmarkTest.LoadControlTests
             }
         }
 
+        [TestMethod]
+        public void WebServerSimulator_ProfileFinderLoadController2()
+        {
+            var result = new List<PerformanceRecord>();
+            for (int i = 0; i < 1000; i++)
+            {
+                var loadController = new ProfileFinderLoadController2();
+                TestLoadController(new WebServerSimulator(50, 60), loadController, 10, 1, false);
+                result.Add(loadController.Result);
+            }
+            var min = result.Min(x => x.Profiles);
+            var max = result.Max(x => x.Profiles);
+            //using (var writer = new StreamWriter(@"D:\test.txt"))
+            //    foreach (var item in result)
+            //        writer.WriteLine($"{item.Profiles}\t{item.AverageRequestsPerSec.ToString(CultureInfo.InvariantCulture).Replace(".", ",")}");
+        }
+        [TestMethod]
+        public void WebServerSimulator_ProfileFinderLoadController2_Trace()
+        {
+            var loadController = new ProfileFinderLoadController2();
+            TestLoadController(new WebServerSimulator(50, 60), loadController, 10, 1, true);
+            var result = loadController.Result;
+        }
+        private void TestLoadController(WebServerSimulator server, ProfileFinderLoadController2 loadController, int profiles, int growth, bool trace)
+        {
+            var exit = false;
+
+            if (trace)
+                Debug.WriteLine("Trigger\tr/s\tAVGr/s\tMPD\tProfiles\tTrace");
+
+            while (!exit)
+            {
+                var reqPerSec = server.GetRequestPerSec(profiles);
+                loadController.Progress(reqPerSec, profiles);
+                var filteredValue = loadController.FilteredRequestsPerSec;
+                var diffValue = loadController.DiffValue;
+                var detected = loadController.TopValueDetected ? 1 : 0;
+
+                if (trace)
+                    Debug.WriteLine("{0}\t{1}\t{2}\t{3}\t{4}\t{5}", detected * 100, reqPerSec, filteredValue, diffValue * 200, profiles, loadController.Trace);
+
+                var loadControl = loadController.Next();
+                switch (loadControl)
+                {
+                    case LoadControl.Stay:
+                        break;
+                    case LoadControl.Exit:
+                        exit = true;
+                        break;
+                    case LoadControl.Increase:
+                        profiles += growth;
+                        break;
+                    case LoadControl.Decrease:
+                        profiles -= growth;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("Unknown load control: " + loadControl);
+                }
+            }
+        }
     }
 }

@@ -239,4 +239,72 @@ namespace SnBenchmark
             }
         }
     }
+
+    public class ProfileFinderLoadController2 : LoadController
+    {
+        private int _sustainCounterMax = 320; // noise filter length (100 + 200) + safety
+        private double _performanceDeltaTrigger = 5.0;
+        private readonly NoiseFilter _rpsFilter = new NoiseFilter(200);
+        public readonly List<PerformanceRecord> AveragePerformanceHistory = new List<PerformanceRecord>();
+        public double MaxPerformance { get; private set; }
+        public int ProgressValue { get; private set; }
+
+        public PerformanceRecord Result { get; private set; }
+        public double Trace => _rpsFilter.FilteredValue;
+
+        public override void Progress(int requestsPerSec, int countOfRunningProfiles)
+        {
+            base.Progress(requestsPerSec, countOfRunningProfiles);
+            _rpsFilter.NextValue(MaxPerformanceDetector.FilteredRequestsPerSec);
+        }
+
+        public override LoadControl Next()
+        {
+            switch (ControllerState)
+            {
+                case State.Initial:
+                    Counter = 0;
+                    ProgressValue = Counter;
+                    ControllerState = State.Growing;
+                    return LoadControl.Stay;
+                case State.Growing:
+                    ProgressValue = GrowingCounterMax - Counter;
+                    if (Counter < GrowingCounterMax)
+                        return LoadControl.Stay;
+                    Counter = 0;
+                    ProgressValue = GrowingCounterMax - Counter;
+                    if (PerformanceTopValues.Count == 0)
+                        return LoadControl.Increase;
+                    ControllerState = State.MaxDetected;
+                    return LoadControl.Stay;
+                case State.MaxDetected:
+                    ProgressValue = _sustainCounterMax * 2 - Counter;
+                    if (Counter < _sustainCounterMax * 2)
+                        return LoadControl.Stay;
+                    Counter = 0;
+                    ProgressValue = 0;
+
+                    var currentAvg = _rpsFilter.FilteredValue;
+                    AveragePerformanceHistory.Add(new PerformanceRecord { AverageRequestsPerSec = currentAvg, Profiles = CountOfRunningProfiles });
+                    MaxPerformance = AveragePerformanceHistory.Max(x => x.AverageRequestsPerSec);
+
+                    ControllerState = State.Decreasing;
+                    return LoadControl.Decrease;
+                case State.Decreasing:
+                    var modulo = Counter % _sustainCounterMax;
+                    ProgressValue = _sustainCounterMax - modulo;
+                    currentAvg = _rpsFilter.FilteredValue;
+                    if (modulo > 0)
+                        return LoadControl.Stay;
+                    var last = AveragePerformanceHistory[AveragePerformanceHistory.Count - 1];
+                    AveragePerformanceHistory.Add(new PerformanceRecord { AverageRequestsPerSec = currentAvg, Profiles = CountOfRunningProfiles });
+                    if (MaxPerformance - currentAvg < _performanceDeltaTrigger)
+                        return LoadControl.Decrease;
+                    Result = last;
+                    return LoadControl.Exit;
+                default:
+                    throw new ArgumentOutOfRangeException("Unused state: " + ControllerState);
+            }
+        }
+    }
 }

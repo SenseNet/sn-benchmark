@@ -4,7 +4,7 @@
     {
         private readonly NoiseFilter _inputFilter = new NoiseFilter(100);
         private readonly NoiseFilter _diffFilter = new NoiseFilter(50);
-        private int trigger = 10;
+        private int trigger = 20;
         private int _continuousNegative;
 
         public double CurrentValue { get; private set; }

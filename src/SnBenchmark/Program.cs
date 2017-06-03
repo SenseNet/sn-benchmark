@@ -237,7 +237,7 @@ namespace SnBenchmark
 
             Web.RequestsPerSec = 0;
             _mainState = MainState.Measuring;
-            _loadController = new ProfileFinderLoadController();
+            _loadController = new ProfileFinderLoadController2();
 
             // wait for the benchmark finished
             while (!_finished)
@@ -382,7 +382,7 @@ namespace SnBenchmark
         }
 
         private static bool _finished;
-        private static ProfileFinderLoadController _loadController;
+        private static ProfileFinderLoadController2 _loadController;
 
         private static int _warmupCounter;
         private static void Warmup()
@@ -427,11 +427,11 @@ namespace SnBenchmark
                     _finished = true;
                     break;
                 case LoadControl.Increase:
-                    Console.WriteLine($"INCREASE. Profiles: {RunningProfiles.Count}");
+                    Console.WriteLine($"INCREASE. {RunningProfiles.Count}");
                     AddAndStartProfiles(_growingProfiles);
                     break;
                 case LoadControl.Decrease:
-                    Console.WriteLine($"DECREASE. Profiles: {RunningProfiles.Count}");
+                    Console.WriteLine($"DECREASE. {RunningProfiles.Count}, {_loadController.AveragePerformanceHistory.Last().AverageRequestsPerSec:0.###} RPS");
                     StopProfiles(_growingProfiles);
                     break;
                 default:
