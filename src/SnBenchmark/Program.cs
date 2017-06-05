@@ -247,7 +247,7 @@ namespace SnBenchmark
             //UNDONE: Get overall benchmark result
             var result = _loadController.Result;
 
-            var benchmarkResult = $"================= BENCHMARK RESULT: Profiles: {result.Profiles}, RPS: {result.AverageRequestsPerSec:0.####}, Total errors: " + (_errorCountInWarmup + _errorCount);
+            var benchmarkResult = $"================= BENCHMARK RESULT: Profiles: {result.Profiles}; RPS: {result.AverageRequestsPerSec:0.####}; Total errors: " + (_errorCountInWarmup + _errorCount);
             Console.WriteLine(benchmarkResult);
             WriteToOutputFile(benchmarkResult);
 
@@ -339,7 +339,7 @@ namespace SnBenchmark
         //    return finished;
         //}
 
-        //=========================================================== Write result output
+        // =========================================================== Write result output
 
         private static string FormatBenchmarkResult(List<Profile> profiles, Dictionary<string, double> avgResponseTimesInSec)
         {
@@ -407,6 +407,7 @@ namespace SnBenchmark
             var diffValue = _loadController.DiffValue;
             var detected = _loadController.TopValueDetected ? 1 : 0;
 //UNDONE: delete _maxPerformanceDetector
+//UNDONE: delete _limits
             var logLine = $"{profiles}\t{Web.ActiveRequests}\t{reqPerSec}\t" +
                 $"{filteredValue}\t" +
                 $"{diffValue * 200}\t" +
@@ -427,11 +428,15 @@ namespace SnBenchmark
                     _finished = true;
                     break;
                 case LoadControl.Increase:
-                    Console.WriteLine($"INCREASE. {RunningProfiles.Count}");
+                    var speedTrace = string.Join("; ", _periodData.Values.Select(d => d.ToString("0.00")).ToArray());
+                    Console.WriteLine($"INCREASE. {RunningProfiles.Count}; {_loadController.AveragePerformanceHistory.Last().AverageRequestsPerSec:0.000} RPS; {speedTrace}");
+                    _periodData = Web.GetPeriodDataAndReset();
                     AddAndStartProfiles(_growingProfiles);
                     break;
                 case LoadControl.Decrease:
-                    Console.WriteLine($"DECREASE. {RunningProfiles.Count}, {_loadController.AveragePerformanceHistory.Last().AverageRequestsPerSec:0.###} RPS");
+                    speedTrace = string.Join("; ", _periodData.Values.Select(d => d.ToString("0.00")).ToArray());
+                    Console.WriteLine($"DECREASE. {RunningProfiles.Count}; {_loadController.AveragePerformanceHistory.Last().AverageRequestsPerSec:0.000} RPS; {speedTrace}");
+                    _periodData = Web.GetPeriodDataAndReset();
                     StopProfiles(_growingProfiles);
                     break;
                 default:
@@ -486,7 +491,7 @@ namespace SnBenchmark
                     writer.WriteLine(line.Replace('\t', ';'));
         }
 
-        //=========================================================== Error log
+        // =========================================================== Error log
 
         private static readonly object ErrorFileSync = new object();
         private static string _errorFile;

@@ -260,6 +260,7 @@ namespace SnBenchmark
 
         public override LoadControl Next()
         {
+            double currentAvg;
             switch (ControllerState)
             {
                 case State.Initial:
@@ -271,23 +272,26 @@ namespace SnBenchmark
                     ProgressValue = GrowingCounterMax - Counter;
                     if (Counter < GrowingCounterMax)
                         return LoadControl.Stay;
+
                     Counter = 0;
                     ProgressValue = GrowingCounterMax - Counter;
+                    currentAvg = _rpsFilter.FilteredValue;
+                    AveragePerformanceHistory.Add(new PerformanceRecord { AverageRequestsPerSec = currentAvg, Profiles = CountOfRunningProfiles });
                     if (PerformanceTopValues.Count == 0)
                         return LoadControl.Increase;
+
                     ControllerState = State.MaxDetected;
                     return LoadControl.Stay;
                 case State.MaxDetected:
                     ProgressValue = _sustainCounterMax * 2 - Counter;
                     if (Counter < _sustainCounterMax * 2)
                         return LoadControl.Stay;
+
                     Counter = 0;
                     ProgressValue = 0;
-
-                    var currentAvg = _rpsFilter.FilteredValue;
+                    currentAvg = _rpsFilter.FilteredValue;
                     AveragePerformanceHistory.Add(new PerformanceRecord { AverageRequestsPerSec = currentAvg, Profiles = CountOfRunningProfiles });
                     MaxPerformance = AveragePerformanceHistory.Max(x => x.AverageRequestsPerSec);
-
                     ControllerState = State.Decreasing;
                     return LoadControl.Decrease;
                 case State.Decreasing:
@@ -296,10 +300,12 @@ namespace SnBenchmark
                     currentAvg = _rpsFilter.FilteredValue;
                     if (modulo > 0)
                         return LoadControl.Stay;
+
                     var last = AveragePerformanceHistory[AveragePerformanceHistory.Count - 1];
                     AveragePerformanceHistory.Add(new PerformanceRecord { AverageRequestsPerSec = currentAvg, Profiles = CountOfRunningProfiles });
                     if (MaxPerformance - currentAvg < _performanceDeltaTrigger)
                         return LoadControl.Decrease;
+
                     Result = last;
                     return LoadControl.Exit;
                 default:
