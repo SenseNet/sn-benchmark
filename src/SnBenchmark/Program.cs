@@ -17,7 +17,7 @@ namespace SnBenchmark
 
         private static Configuration _configuration;
         private static List<string> _speedItems;
-        private static Dictionary<string, double> _limits;
+        private static Dictionary<string, double> _periodData;
 
         private static void Main(string[] args)
         {
@@ -152,8 +152,10 @@ namespace SnBenchmark
             }
 
             _speedItems = speedItems;
+            _periodData = new Dictionary<string, double>();
+            foreach (var key in speedItems)
+                _periodData.Add(key, 0.0);
 
-            CreateLimitsAndInitialPeriodData(speedItems);
             Web.Initialize(speedItems);
 
             return profiles;
@@ -169,26 +171,10 @@ namespace SnBenchmark
             using (var reader = new StreamReader(profileFiles[0]))
                 return reader.ReadToEnd();
         }
-        private static void CreateLimitsAndInitialPeriodData(IEnumerable<string> speedItems)
-        {
-            _limits = new Dictionary<string, double>();
-            _periodData = new Dictionary<string, double>();
-            var config = _configuration.Limits;
-            foreach (var key in speedItems)
-            {
-                double value;
-                if (!config.TryGetValue(key, out value))
-                    value = Configuration.DefaultLimitValue;
-                _limits.Add(key, value);
-                _periodData.Add(key, 0.0);
-            }
-        }
 
         private static readonly List<Profile> RunningProfiles = new List<Profile>();
         private static List<Profile> _growingProfiles;
 
-        private static MaxPerformanceDetector _maxPerformanceDetector;
-        private static int _endPointDetected;
         private static System.Timers.Timer _timer;
         public static int StoppedProfiles { get; set; }
 
@@ -218,8 +204,6 @@ namespace SnBenchmark
         {
             _growingProfiles = growingProfiles;
 
-            _maxPerformanceDetector = new MaxPerformanceDetector();
-
             _timer = new System.Timers.Timer(1000.0);
             _timer.Elapsed += Timer_Elapsed;
             _timer.Disposed += Timer_Disposed;
@@ -244,9 +228,7 @@ namespace SnBenchmark
                 await Task.Delay(1000);
             _mainState = MainState.Cooldown;
 
-            //UNDONE: Get overall benchmark result
             var result = _loadController.Result;
-
             var benchmarkResult = $"================= BENCHMARK RESULT: Profiles: {result.Profiles}; RPS: {result.AverageRequestsPerSec:0.####}; Total errors: " + (_errorCountInWarmup + _errorCount);
             Console.WriteLine(benchmarkResult);
             WriteToOutputFile(benchmarkResult);
@@ -324,23 +306,9 @@ namespace SnBenchmark
                 profile.Test(EnsureProfileResponsesDirectory(profile.Name));
         }
 
-
-        private static Dictionary<string, double> _periodData;
-        //private static string _lastBenchmarkResult;
-        //private static string _benchmarkResult;
-        //private static bool CheckBoundaryConditions(Dictionary<string, double> limits)
-        //{
-        //    _periodData = Web.GetPeriodDataAndReset();
-        //    _lastBenchmarkResult = _benchmarkResult;
-        //    _benchmarkResult = FormatBenchmarkResult(RunningProfiles, _periodData);
-        //    var finished = _periodData.Any(x => x.Value >= limits[x.Key])
-        //                   || _errorCount >= _configuration.MaxErrors
-        //                   || _endPointDetected >= 3;
-        //    return finished;
-        //}
-
         // =========================================================== Write result output
 
+        //UNDONE: Use this method
         private static string FormatBenchmarkResult(List<Profile> profiles, Dictionary<string, double> avgResponseTimesInSec)
         {
             return $"{profiles.Count} profiles ({string.Join(", ", RunningProfiles.GroupBy(x => x.Name).Select(g => "" + g.Key + ":" + g.Count()))}), " + 
@@ -406,15 +374,12 @@ namespace SnBenchmark
             var filteredValue = _loadController.FilteredRequestsPerSec;
             var diffValue = _loadController.DiffValue;
             var detected = _loadController.TopValueDetected ? 1 : 0;
-//UNDONE: delete _maxPerformanceDetector
-//UNDONE: delete _limits
             var logLine = $"{profiles}\t{Web.ActiveRequests}\t{reqPerSec}\t" +
                 $"{filteredValue}\t" +
                 $"{diffValue * 200}\t" +
                 $"{detected * 100}\t" +
                 $"{_loadController.Trace}\t" +
-                $"{string.Join("\t", _periodData.Values.Select(d => d.ToString("0.00")).ToArray())}\t" +
-                $"{string.Join("\t", _limits.Values.Select(d => d.ToString("0.00")).ToArray())}";
+                $"{string.Join("\t", _periodData.Values.Select(d => d.ToString("0.00")).ToArray())}";
             WriteToOutputFile(logLine);
 
             var loadControl = _loadController.Next();
@@ -442,6 +407,10 @@ namespace SnBenchmark
                 default:
                     throw new ArgumentOutOfRangeException("Unknown load control: " + loadControl);
             }
+
+            if(_errorCount >= _configuration.MaxErrors)
+                _finished = true;
+
             if (Console.KeyAvailable)
             {
                 var key = Console.ReadKey(true);
@@ -478,7 +447,6 @@ namespace SnBenchmark
                     wr.WriteLine("Initial profiles:;{0}", string.Join(Environment.NewLine + ";", configuration.InitialProfiles.Select(x => x.Key + ";" + x.Value)));
                     wr.WriteLine("Growing profiles:;{0}", string.Join(Environment.NewLine + ";", configuration.GrowingProfiles.Select(x => x.Key + ";" + x.Value)));
                     wr.WriteLine("Growing time:;{0}", configuration.GrowingTime);
-                    wr.WriteLine("Limits:;{0}", string.Join(Environment.NewLine + ";", configuration.Limits.Select(x => x.Key + ";" + x.Value)));
                     wr.WriteLine("Max error count:;{0}", _configuration.MaxErrors);
                     wr.WriteLine();
                 }
