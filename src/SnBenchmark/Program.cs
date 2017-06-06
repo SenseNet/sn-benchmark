@@ -228,9 +228,14 @@ namespace SnBenchmark
             _mainState = MainState.Cooldown;
 
             var result = _loadController.Result;
-            var benchmarkResult = $"================= BENCHMARK RESULT: Profiles: {result.Profiles}; RPS: {result.AverageRequestsPerSec:0.####}; Total errors: " + (_errorCountInWarmup + _errorCount);
-            Console.WriteLine(benchmarkResult);
-            WriteToOutputFile(benchmarkResult);
+            if (result != null)
+            {
+                var benchmarkResult =
+                    $"================= BENCHMARK RESULT: Profiles: {result.Profiles}; RPS: {result.AverageRequestsPerSec:0.####}; Total errors: " +
+                    (_errorCountInWarmup + _errorCount);
+                Console.WriteLine(benchmarkResult);
+                WriteToOutputFile(benchmarkResult);
+            }
 
             // wait for profiles that are still running to stop
             await ShutdownProfiles();
@@ -281,7 +286,7 @@ namespace SnBenchmark
                     break;
 
                 lastCounts.Enqueue(running);
-                if (lastCounts.Count > 10)
+                if (lastCounts.Count > 30)
                 {
                     lastCounts.Dequeue();
                     if (lastCounts.First() == lastCounts.Last())
@@ -353,12 +358,10 @@ namespace SnBenchmark
         {
             Console.Write($"Warmup: {_configuration.WarmupTime - _warmupCounter++}     \r");
         }
-
         private static void Cooldown()
         {
             Console.Write($"Waiting for {RunningProfiles.Count} profiles stopped.     \r");
         }
-
         private static void Measuring()
         {
             var reqPerSec = Web.RequestsPerSec;
@@ -417,7 +420,6 @@ namespace SnBenchmark
                 }
             }
         }
-
 
         // ===================================================================== Output file
 
