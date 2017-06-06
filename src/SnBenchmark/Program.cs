@@ -324,7 +324,7 @@ namespace SnBenchmark
 
         private static string FormatBenchmarkResult(PerformanceRecord result)
         {
-            return $"Profiles: {result.Profiles} ({result.ProfileComposition}); " +
+            return $"BENCHMARK RESULT: Profiles: {result.Profiles} ({result.ProfileComposition}); " +
                    $"RPS: {result.AverageRequestsPerSec:0.####}; " +
                    $"All requests: {Web.AllRequests}; " +
                    $"Errors: {_errorCount}; " +
