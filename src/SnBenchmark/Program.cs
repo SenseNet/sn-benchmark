@@ -176,7 +176,6 @@ namespace SnBenchmark
         private static List<Profile> _growingProfiles;
 
         private static System.Timers.Timer _timer;
-        public static int StoppedProfiles { get; set; }
 
         private static readonly object ErrorSync = new object();
         private static MainState _mainState;
@@ -239,46 +238,20 @@ namespace SnBenchmark
             _timer.Stop();
         }
 
-
-        private static async Task ShutdownProfiles()
-        {
-            foreach (var runningProfile in RunningProfiles)
-                runningProfile.Stop();
-
-            var lastCounts = new Queue<int>();
-            while (true)
-            {
-                var running = RunningProfiles.Count - StoppedProfiles;
-                if (running == 0)
-                    break;
-
-                lastCounts.Enqueue(running);
-                if (lastCounts.Count > 5)
-                {
-                    lastCounts.Dequeue();
-                    if (lastCounts.First() == lastCounts.Last())
-                        break;
-                }
-
-                await Task.Delay(1000);
-            }
-        }
-
-
-        private static readonly Dictionary<string, int> ActualProfileCounts = new Dictionary<string, int>();
+        private static readonly Dictionary<string, int> CurrentProfileComposition = new Dictionary<string, int>();
         private static void AddAndStartProfiles(List<Profile> profiles)
         {
             foreach (var profile in profiles)
             {
                 int actualCount;
-                if (!ActualProfileCounts.TryGetValue(profile.Name, out actualCount))
-                    ActualProfileCounts[profile.Name] = 0;
+                if (!CurrentProfileComposition.TryGetValue(profile.Name, out actualCount))
+                    CurrentProfileComposition[profile.Name] = 0;
 
                 var limit = _configuration.ProfileLimits[profile.Name];
                 if (limit > 0 && actualCount >= limit)
                     continue;
 
-                ActualProfileCounts[profile.Name]++;
+                CurrentProfileComposition[profile.Name]++;
 
                 // clone the profile to avoid modifying the original version
                 var newProfile = profile.Clone();
@@ -295,10 +268,33 @@ namespace SnBenchmark
             foreach (var profile in profiles)
                 RunningProfiles.FirstOrDefault(p=>p.Name == profile.Name && p.Running)?.Stop();
         }
+        private static async Task ShutdownProfiles()
+        {
+            foreach (var runningProfile in RunningProfiles)
+                runningProfile.Stop();
+
+            var lastCounts = new Queue<int>();
+            while (true)
+            {
+                var running = RunningProfiles.Count;
+                if (running == 0)
+                    break;
+
+                lastCounts.Enqueue(running);
+                if (lastCounts.Count > 10)
+                {
+                    lastCounts.Dequeue();
+                    if (lastCounts.First() == lastCounts.Last())
+                        break;
+                }
+
+                await Task.Delay(1000);
+            }
+        }
         public static void ProfileStopped(Profile profile)
         {
             RunningProfiles.Remove(profile);
-            ActualProfileCounts[profile.Name]--;
+            CurrentProfileComposition[profile.Name]--;
         }
         private static void TestProfiles(List<Profile> profiles)
         {

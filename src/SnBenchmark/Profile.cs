@@ -109,7 +109,6 @@ namespace SnBenchmark
                 if (!Running)
                     break;
             }
-            Program.StoppedProfiles++;
             Program.ProfileStopped(this);
         }
 
