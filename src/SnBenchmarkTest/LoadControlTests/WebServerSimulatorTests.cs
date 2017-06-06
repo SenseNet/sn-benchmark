@@ -39,7 +39,7 @@ namespace SnBenchmarkTest.LoadControlTests
             while (!exit)
             {
                 var reqPerSec = server.GetRequestPerSec(profiles);
-                loadController.Progress(reqPerSec, profiles);
+                loadController.Progress(reqPerSec, profiles, $"Profile1: {profiles}", "NORMAL: 0.42");
                 var filteredValue = loadController.FilteredRequestsPerSec;
                 var diffValue = loadController.DiffValue;
                 var detected = loadController.TopValueDetected ? 1 : 0;
@@ -94,7 +94,7 @@ namespace SnBenchmarkTest.LoadControlTests
             while (!exit)
             {
                 var reqPerSec = server.GetRequestPerSec(profiles);
-                loadController.Progress(reqPerSec, profiles);
+                loadController.Progress(reqPerSec, profiles, $"Profile1: {profiles}", "NORMAL: 0.42");
                 var filteredValue = loadController.FilteredRequestsPerSec;
                 var diffValue = loadController.DiffValue;
                 var detected = loadController.TopValueDetected ? 1 : 0;
@@ -155,7 +155,7 @@ namespace SnBenchmarkTest.LoadControlTests
             while (!exit)
             {
                 var reqPerSec = server.GetRequestPerSec(profiles);
-                loadController.Progress(reqPerSec, profiles);
+                loadController.Progress(reqPerSec, profiles, $"Profile1: {profiles}", "NORMAL: 0.42");
                 var filteredValue = loadController.FilteredRequestsPerSec;
                 var diffValue = loadController.DiffValue;
                 var detected = loadController.TopValueDetected ? 1 : 0;

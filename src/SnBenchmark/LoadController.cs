@@ -8,8 +8,10 @@ namespace SnBenchmark
     [DebuggerDisplay("{Profiles}, {AverageRequestsPerSec}")]
     public class PerformanceRecord
     {
-        public double AverageRequestsPerSec { get; set; }
         public int Profiles { get; set; }
+        public string ProfileComposition { get; set; }
+        public double AverageRequestsPerSec { get; set; }
+        public string AverageResponseTime { get; set; }
     }
 
     public enum LoadControl { Stay, Increase, Decrease, Exit }
@@ -21,6 +23,8 @@ namespace SnBenchmark
         public int Counter { get; protected set; }
         protected readonly int GrowingCounterMax = 30;
         protected int CountOfRunningProfiles;
+        protected string RunningProfileComposition;
+        protected string AverageResponseTime;
 
         protected readonly MaxPerformanceDetector MaxPerformanceDetector= new MaxPerformanceDetector();
         protected List<PerformanceRecord> PerformanceTopValues = new List<PerformanceRecord>();
@@ -29,17 +33,21 @@ namespace SnBenchmark
         public double FilteredRequestsPerSec => MaxPerformanceDetector.FilteredRequestsPerSec;
         public double DiffValue => MaxPerformanceDetector.CurrentValue;
 
-        public virtual void Progress(int requestsPerSec, int countOfRunningProfiles)
+        public virtual void Progress(int requestsPerSec, int countOfRunningProfiles, string runningProfileComposition, string averageResponseTime)
         {
             Counter++;
             CountOfRunningProfiles = countOfRunningProfiles;
+            RunningProfileComposition = runningProfileComposition;
+            AverageResponseTime = averageResponseTime;
             // ReSharper disable once RedundantBoolCompare
             if ((TopValueDetected = MaxPerformanceDetector.Detect(requestsPerSec)) == true)
             {
                 PerformanceTopValues.Add(new PerformanceRecord
                 {
                     AverageRequestsPerSec = MaxPerformanceDetector.FilteredRequestsPerSec,
-                    Profiles = countOfRunningProfiles
+                    Profiles = countOfRunningProfiles,
+                    ProfileComposition = runningProfileComposition,
+                    AverageResponseTime = averageResponseTime
                 });
             }
         }
@@ -170,9 +178,9 @@ namespace SnBenchmark
         public PerformanceRecord Result { get; private set; }
         public double Trace =>  _rpsFilter.FilteredValue;
 
-        public override void Progress(int requestsPerSec, int countOfRunningProfiles)
+        public override void Progress(int requestsPerSec, int countOfRunningProfiles, string runningProfileComposition, string averageResponseTime)
         {
-            base.Progress(requestsPerSec, countOfRunningProfiles);
+            base.Progress(requestsPerSec, countOfRunningProfiles, runningProfileComposition, averageResponseTime);
             _rpsFilter.NextValue(MaxPerformanceDetector.FilteredRequestsPerSec);
         }
 
@@ -212,10 +220,22 @@ namespace SnBenchmark
                     {
                         if( modulo > 0 )
                             return LoadControl.Stay;
-                        AveragePerformanceHistory.Add(new PerformanceRecord {AverageRequestsPerSec = currentAvg, Profiles = CountOfRunningProfiles});
+                        AveragePerformanceHistory.Add(new PerformanceRecord
+                        {
+                            AverageRequestsPerSec = currentAvg,
+                            Profiles = CountOfRunningProfiles,
+                            ProfileComposition = RunningProfileComposition,
+                            AverageResponseTime = AverageResponseTime
+                        });
                         return LoadControl.Increase;
                     }
-                    AveragePerformanceHistory.Add(new PerformanceRecord { AverageRequestsPerSec = currentAvg, Profiles = CountOfRunningProfiles });
+                    AveragePerformanceHistory.Add(new PerformanceRecord
+                    {
+                        AverageRequestsPerSec = currentAvg,
+                        Profiles = CountOfRunningProfiles,
+                        ProfileComposition = RunningProfileComposition,
+                        AverageResponseTime = AverageResponseTime
+                    });
                     MaxPerformance = AveragePerformanceHistory.Max(x => x.AverageRequestsPerSec);
                     Counter = -1;
                     ProgressValue = 0;
@@ -229,7 +249,13 @@ namespace SnBenchmark
                     if (modulo > 0)
                         return LoadControl.Stay;
                     var last = AveragePerformanceHistory[AveragePerformanceHistory.Count - 1];
-                    AveragePerformanceHistory.Add(new PerformanceRecord { AverageRequestsPerSec = currentAvg, Profiles = CountOfRunningProfiles });
+                    AveragePerformanceHistory.Add(new PerformanceRecord
+                    {
+                        AverageRequestsPerSec = currentAvg,
+                        Profiles = CountOfRunningProfiles,
+                        ProfileComposition = RunningProfileComposition,
+                        AverageResponseTime = AverageResponseTime
+                    });
                     if (MaxPerformance - currentAvg < _performanceDeltaTrigger)
                         return LoadControl.Decrease;
                     Result = last;
@@ -252,9 +278,9 @@ namespace SnBenchmark
         public PerformanceRecord Result { get; private set; }
         public double Trace => _rpsFilter.FilteredValue;
 
-        public override void Progress(int requestsPerSec, int countOfRunningProfiles)
+        public override void Progress(int requestsPerSec, int countOfRunningProfiles, string runningProfileComposition, string averageResponseTime)
         {
-            base.Progress(requestsPerSec, countOfRunningProfiles);
+            base.Progress(requestsPerSec, countOfRunningProfiles, runningProfileComposition, averageResponseTime);
             _rpsFilter.NextValue(MaxPerformanceDetector.FilteredRequestsPerSec);
         }
 
@@ -276,7 +302,13 @@ namespace SnBenchmark
                     Counter = 0;
                     ProgressValue = GrowingCounterMax - Counter;
                     currentAvg = _rpsFilter.FilteredValue;
-                    AveragePerformanceHistory.Add(new PerformanceRecord { AverageRequestsPerSec = currentAvg, Profiles = CountOfRunningProfiles });
+                    AveragePerformanceHistory.Add(new PerformanceRecord
+                    {
+                        AverageRequestsPerSec = currentAvg,
+                        Profiles = CountOfRunningProfiles,
+                        ProfileComposition = RunningProfileComposition,
+                        AverageResponseTime = AverageResponseTime
+                    });
                     if (PerformanceTopValues.Count == 0)
                         return LoadControl.Increase;
 
@@ -290,7 +322,13 @@ namespace SnBenchmark
                     Counter = 0;
                     ProgressValue = 0;
                     currentAvg = _rpsFilter.FilteredValue;
-                    AveragePerformanceHistory.Add(new PerformanceRecord { AverageRequestsPerSec = currentAvg, Profiles = CountOfRunningProfiles });
+                    AveragePerformanceHistory.Add(new PerformanceRecord
+                    {
+                        AverageRequestsPerSec = currentAvg,
+                        Profiles = CountOfRunningProfiles,
+                        ProfileComposition = RunningProfileComposition,
+                        AverageResponseTime = AverageResponseTime
+                    });
                     MaxPerformance = AveragePerformanceHistory.Max(x => x.AverageRequestsPerSec);
                     ControllerState = State.Decreasing;
                     return LoadControl.Decrease;
@@ -302,7 +340,13 @@ namespace SnBenchmark
                         return LoadControl.Stay;
 
                     var last = AveragePerformanceHistory[AveragePerformanceHistory.Count - 1];
-                    AveragePerformanceHistory.Add(new PerformanceRecord { AverageRequestsPerSec = currentAvg, Profiles = CountOfRunningProfiles });
+                    AveragePerformanceHistory.Add(new PerformanceRecord
+                    {
+                        AverageRequestsPerSec = currentAvg,
+                        Profiles = CountOfRunningProfiles,
+                        ProfileComposition = RunningProfileComposition,
+                        AverageResponseTime = AverageResponseTime
+                    });
                     if (MaxPerformance - currentAvg < _performanceDeltaTrigger)
                         return LoadControl.Decrease;
 

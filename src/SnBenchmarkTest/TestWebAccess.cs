@@ -18,7 +18,7 @@ namespace SnBenchmarkTest
             throw new NotImplementedException();
         }
 
-        public Dictionary<string, double> GetPeriodDataAndReset()
+        public Dictionary<string, double> GetAverageResponseStringAndReset()
         {
             throw new NotImplementedException();
         }

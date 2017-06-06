@@ -17,7 +17,8 @@ namespace SnBenchmark
 
         private static Configuration _configuration;
         private static List<string> _speedItems;
-        private static Dictionary<string, double> _periodData;
+        private static Dictionary<string, double> _averageResponseTime;
+        private static string _averageResponseTimeString;
 
         private static void Main(string[] args)
         {
@@ -152,9 +153,10 @@ namespace SnBenchmark
             }
 
             _speedItems = speedItems;
-            _periodData = new Dictionary<string, double>();
+            _averageResponseTime = new Dictionary<string, double>();
             foreach (var key in speedItems)
-                _periodData.Add(key, 0.0);
+                _averageResponseTime.Add(key, 0.0);
+            AverageResponseTimeToString();
 
             Web.Initialize(speedItems);
 
@@ -172,6 +174,9 @@ namespace SnBenchmark
                 return reader.ReadToEnd();
         }
 
+        private static readonly Dictionary<string, int> CurrentProfileComposition = new Dictionary<string, int>();
+        private static object _currentProfilesLock = new object();
+        private static string _currentProfileCompositionString;
         private static readonly List<Profile> RunningProfiles = new List<Profile>();
         private static List<Profile> _growingProfiles;
 
@@ -230,9 +235,7 @@ namespace SnBenchmark
             var result = _loadController.Result;
             if (result != null)
             {
-                var benchmarkResult =
-                    $"================= BENCHMARK RESULT: Profiles: {result.Profiles}; RPS: {result.AverageRequestsPerSec:0.####}; Total errors: " +
-                    (_errorCountInWarmup + _errorCount);
+                var benchmarkResult = FormatBenchmarkResult(result);
                 Console.WriteLine(benchmarkResult);
                 WriteToOutputFile(benchmarkResult);
             }
@@ -243,7 +246,6 @@ namespace SnBenchmark
             _timer.Stop();
         }
 
-        private static readonly Dictionary<string, int> CurrentProfileComposition = new Dictionary<string, int>();
         private static void AddAndStartProfiles(List<Profile> profiles)
         {
             foreach (var profile in profiles)
@@ -266,7 +268,9 @@ namespace SnBenchmark
 #pragma warning disable CS4014
                 newProfile.ExecuteAsync();
 #pragma warning restore CS4014
+
             }
+            CurrentProfileCompositionToString();
         }
         private static void StopProfiles(List<Profile> profiles)
         {
@@ -300,7 +304,16 @@ namespace SnBenchmark
         {
             RunningProfiles.Remove(profile);
             CurrentProfileComposition[profile.Name]--;
+            CurrentProfileCompositionToString();
         }
+
+        private static void CurrentProfileCompositionToString()
+        {
+            lock (_currentProfilesLock)
+                _currentProfileCompositionString = string.Join("; ",
+                    CurrentProfileComposition.Select(x => $"{x.Key}: {x.Value}").ToArray());
+        }
+
         private static void TestProfiles(List<Profile> profiles)
         {
             foreach (var profile in profiles)
@@ -309,12 +322,13 @@ namespace SnBenchmark
 
         // =========================================================== Write result output
 
-        //UNDONE: Use this method
-        private static string FormatBenchmarkResult(List<Profile> profiles, Dictionary<string, double> avgResponseTimesInSec)
+        private static string FormatBenchmarkResult(PerformanceRecord result)
         {
-            return $"{profiles.Count} profiles ({string.Join(", ", RunningProfiles.GroupBy(x => x.Name).Select(g => "" + g.Key + ":" + g.Count()))}), " + 
-                $"all requests:{Web.AllRequests}, errors:{_errorCount}, " +
-                $"average response times: {string.Join(", ", avgResponseTimesInSec.Select(y => $"{y.Key}:{y.Value:0.00}"))}.";
+            return $"Profiles: {result.Profiles} ({result.ProfileComposition}); " +
+                   $"RPS: {result.AverageRequestsPerSec:0.####}; " +
+                   $"All requests: {Web.AllRequests}; " +
+                   $"Errors: {_errorCount}; " +
+                   $"Response times: {result.AverageResponseTime}";
         }
         private static void WriteColumnHeaders(IEnumerable<string> speedItems)
         {
@@ -368,7 +382,7 @@ namespace SnBenchmark
             Web.RequestsPerSec = 0;
 
             var profiles = RunningProfiles.Count;
-            _loadController.Progress(reqPerSec, profiles);
+            _loadController.Progress(reqPerSec, profiles, _currentProfileCompositionString, _averageResponseTimeString);
 
             var filteredValue = _loadController.FilteredRequestsPerSec;
             var diffValue = _loadController.DiffValue;
@@ -378,7 +392,7 @@ namespace SnBenchmark
                 $"{diffValue * 200}\t" +
                 $"{detected * 100}\t" +
                 $"{_loadController.Trace}\t" +
-                $"{string.Join("\t", _periodData.Values.Select(d => d.ToString("0.00")).ToArray())}";
+                $"{string.Join("\t", _averageResponseTime.Values.Select(d => d.ToString("0.00")).ToArray())}";
             WriteToOutputFile(logLine);
 
             var loadControl = _loadController.Next();
@@ -392,15 +406,17 @@ namespace SnBenchmark
                     _finished = true;
                     break;
                 case LoadControl.Increase:
-                    var speedTrace = string.Join("; ", _periodData.Values.Select(d => d.ToString("0.00")).ToArray());
+                    var speedTrace = string.Join("; ", _averageResponseTime.Values.Select(d => d.ToString("0.00")).ToArray());
                     Console.WriteLine($"INCREASE. {RunningProfiles.Count}; {_loadController.AveragePerformanceHistory.Last().AverageRequestsPerSec:0.000} RPS; {speedTrace}");
-                    _periodData = Web.GetPeriodDataAndReset();
+                    _averageResponseTime = Web.GetAverageResponseStringAndReset();
+                    AverageResponseTimeToString();
                     AddAndStartProfiles(_growingProfiles);
                     break;
                 case LoadControl.Decrease:
-                    speedTrace = string.Join("; ", _periodData.Values.Select(d => d.ToString("0.00")).ToArray());
+                    speedTrace = string.Join("; ", _averageResponseTime.Values.Select(d => d.ToString("0.00")).ToArray());
                     Console.WriteLine($"DECREASE. {RunningProfiles.Count}; {_loadController.AveragePerformanceHistory.Last().AverageRequestsPerSec:0.000} RPS; {speedTrace}");
-                    _periodData = Web.GetPeriodDataAndReset();
+                    _averageResponseTime = Web.GetAverageResponseStringAndReset();
+                    AverageResponseTimeToString();
                     StopProfiles(_growingProfiles);
                     break;
                 default:
@@ -419,6 +435,11 @@ namespace SnBenchmark
                     _finished = true;
                 }
             }
+        }
+
+        private static void AverageResponseTimeToString()
+        {
+            _averageResponseTimeString = string.Join("; ", _averageResponseTime.Select(x => $"{x.Key}: {x.Value:0.###}").ToArray());
         }
 
         // ===================================================================== Output file
