@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace SnBenchmark
 {
@@ -7,7 +8,10 @@ namespace SnBenchmark
         private readonly double _qSize;
         private readonly double[] _buffer;
         private int _index;
+
         public double FilteredValue { get; private set; }
+        public double MinValue => _buffer.Min();
+        public double MaxValue => _buffer.Max();
 
         public NoiseFilter(int size)
         {

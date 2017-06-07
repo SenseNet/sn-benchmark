@@ -238,6 +238,8 @@ namespace SnBenchmark
                 var benchmarkResult = FormatBenchmarkResult(result);
                 Console.WriteLine(benchmarkResult);
                 WriteToOutputFile(benchmarkResult);
+                WriteToOutputFile($"Max performance (RPS);{_loadController.MaxPerformance}");
+                WriteToOutputFile($"Sweet point (RPS);{_loadController.ExpectedPerformance}");
             }
 
             // wait for profiles that are still running to stop
@@ -383,6 +385,8 @@ namespace SnBenchmark
         {
             Console.Write($"Waiting for {RunningProfiles.Count} profiles stopped.     \r");
         }
+
+        private static bool _sweetPointFound;
         private static void Measuring()
         {
             var reqPerSec = Web.RequestsPerSec;
@@ -420,6 +424,11 @@ namespace SnBenchmark
                     AddAndStartProfiles(_growingProfiles);
                     break;
                 case LoadControl.Decrease:
+                    if (!_sweetPointFound)
+                    {
+                        Console.WriteLine($"Performance max: {_loadController.MaxPerformance:0.000}; sweetpoint: {_loadController.ExpectedPerformance:0.000}");
+                        _sweetPointFound = true;
+                    }
                     speedTrace = string.Join("; ", _averageResponseTime.Values.Select(d => d.ToString("0.00")).ToArray());
                     Console.WriteLine($"DECREASE. {RunningProfiles.Count}; {_loadController.AveragePerformanceHistory.Last().AverageRequestsPerSec:0.000} RPS; {speedTrace}");
                     _averageResponseTime = Web.GetAverageResponseStringAndReset();
@@ -439,6 +448,7 @@ namespace SnBenchmark
                 if (key.KeyChar == 'x')
                 {
                     Console.WriteLine("Interrupted by <x> key.");
+                    WriteToOutputFile("Interrupted by <x> key.");
                     _finished = true;
                 }
             }

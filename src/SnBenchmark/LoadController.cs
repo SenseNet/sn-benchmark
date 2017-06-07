@@ -269,10 +269,11 @@ namespace SnBenchmark
     public class ProfileFinderLoadController2 : LoadController
     {
         private int _sustainCounterMax = 320; // noise filter length (100 + 200) + safety
-        private double _performanceDeltaTrigger = 5.0;
         private readonly NoiseFilter _rpsFilter = new NoiseFilter(200);
         public readonly List<PerformanceRecord> AveragePerformanceHistory = new List<PerformanceRecord>();
         public double MaxPerformance { get; private set; }
+        public double ExpectedPerformance { get; private set; }
+
         public int ProgressValue { get; private set; }
 
         public PerformanceRecord Result { get; private set; }
@@ -330,6 +331,8 @@ namespace SnBenchmark
                         AverageResponseTime = AverageResponseTime
                     });
                     MaxPerformance = AveragePerformanceHistory.Max(x => x.AverageRequestsPerSec);
+                    ExpectedPerformance = MaxPerformance * 0.99 - (_rpsFilter.MaxValue - _rpsFilter.MinValue);
+
                     ControllerState = State.Decreasing;
                     return LoadControl.Decrease;
                 case State.Decreasing:
@@ -347,10 +350,13 @@ namespace SnBenchmark
                         ProfileComposition = RunningProfileComposition,
                         AverageResponseTime = AverageResponseTime
                     });
-                    if (MaxPerformance - currentAvg < _performanceDeltaTrigger)
+
+                    // result available anytime in the decreasing phase
+                    Result = last;
+
+                    if (currentAvg > ExpectedPerformance)
                         return LoadControl.Decrease;
 
-                    Result = last;
                     return LoadControl.Exit;
                 default:
                     throw new ArgumentOutOfRangeException("Unused state: " + ControllerState);
