@@ -350,6 +350,11 @@ namespace SnBenchmark
                         ProfileComposition = RunningProfileComposition,
                         AverageResponseTime = AverageResponseTime
                     });
+                    if (currentAvg > MaxPerformance)
+                    {
+                        MaxPerformance = currentAvg;
+                        ExpectedPerformance = MaxPerformance*0.99 - (_rpsFilter.MaxValue - _rpsFilter.MinValue);
+                    }
 
                     // result available anytime in the decreasing phase
                     Result = last;

@@ -386,7 +386,7 @@ namespace SnBenchmark
             Console.Write($"Waiting for {RunningProfiles.Count} profiles stopped.     \r");
         }
 
-        private static bool _sweetPointFound;
+        private static double _maxPerformance;
         private static void Measuring()
         {
             var reqPerSec = Web.RequestsPerSec;
@@ -424,10 +424,10 @@ namespace SnBenchmark
                     AddAndStartProfiles(_growingProfiles);
                     break;
                 case LoadControl.Decrease:
-                    if (!_sweetPointFound)
+                    if (Math.Abs(_loadController.MaxPerformance - _maxPerformance) > 0.000001d )
                     {
                         Console.WriteLine($"Performance max: {_loadController.MaxPerformance:0.000}; sweetpoint: {_loadController.ExpectedPerformance:0.000}");
-                        _sweetPointFound = true;
+                        _maxPerformance = _loadController.MaxPerformance;
                     }
                     speedTrace = string.Join("; ", _averageResponseTime.Values.Select(d => d.ToString("0.00")).ToArray());
                     Console.WriteLine($"DECREASE. {RunningProfiles.Count}; {_loadController.AveragePerformanceHistory.Last().AverageRequestsPerSec:0.000} RPS; {speedTrace}");
