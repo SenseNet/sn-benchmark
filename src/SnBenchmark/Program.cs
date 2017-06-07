@@ -344,8 +344,14 @@ namespace SnBenchmark
             _timer.Elapsed -= Timer_Elapsed;
             _timer.Disposed -= Timer_Disposed;
         }
+
+        private static bool _working;
         private static void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
+            if (_working)
+                return;
+
+            _working = true;
             switch (_mainState)
             {
                 case MainState.Initial:
@@ -362,6 +368,7 @@ namespace SnBenchmark
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+            _working = false;
         }
 
         private static bool _finished;
