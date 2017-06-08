@@ -331,7 +331,7 @@ namespace SnBenchmark
                         AverageResponseTime = AverageResponseTime
                     });
                     MaxPerformance = AveragePerformanceHistory.Max(x => x.AverageRequestsPerSec);
-                    ExpectedPerformance = MaxPerformance * 0.99 - (_rpsFilter.MaxValue - _rpsFilter.MinValue);
+                    ExpectedPerformance = CalculateSweetPoint(_rpsFilter.MinValue, currentAvg, _rpsFilter.MaxValue);
 
                     ControllerState = State.Decreasing;
                     return LoadControl.Decrease;
@@ -353,7 +353,7 @@ namespace SnBenchmark
                     if (currentAvg > MaxPerformance)
                     {
                         MaxPerformance = currentAvg;
-                        ExpectedPerformance = MaxPerformance*0.99 - (_rpsFilter.MaxValue - _rpsFilter.MinValue);
+                        ExpectedPerformance = CalculateSweetPoint(_rpsFilter.MinValue, currentAvg, _rpsFilter.MaxValue);
                     }
 
                     // result available anytime in the decreasing phase
@@ -366,6 +366,12 @@ namespace SnBenchmark
                 default:
                     throw new ArgumentOutOfRangeException("Unused state: " + ControllerState);
             }
+        }
+
+        private double CalculateSweetPoint(double min, double avg, double max)
+        {
+            //return avg * 0.99 - (max - min);
+            return avg*0.95;
         }
     }
 }
