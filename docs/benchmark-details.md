@@ -4,7 +4,7 @@
 <a name="TheTool"></a>
 **SnBenchmark** is a *command line tool* that measures the performance of a sensenet ECM instance and helps you determine real-life capabilities of your site. It requires a running portal, but no modifications are required on the portal side. The tool accesses the site through its *REST API* (or more specifically the [sensenet ECM Client library](http://wiki.sensenet.com/Client_library) built on top of it). As it is written using an *asynchronous* architecture, it does not consume too great amount of resources on the client.
 
-The result of a benchmark execution will be a *csv file* containing request/response times and other collected data that you can use to visualize the behavior of your site under different load. See an example later in this document.
+The result of a benchmark execution will be a *csv file* containing request/response times and other collected data that you can use to visualize the behavior of your site under different loads. See an example later in this document.
 
 For debugging purposes a request log will be written after the execution. This file contains information about the last 10000 requests.
 

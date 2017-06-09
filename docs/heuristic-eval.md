@@ -3,7 +3,7 @@
 ## Maximum performance detection analysis with a heuristic algorithm
 
 The sensenet ECM server environment reaches its maximum performance (for whatever reason) when the served request count cannot increase, even if the received requests are growing. 
-This expectation outlines a prerequisit to the algorithm to work: after having reached the maximum performance, during an increasing load we must see a constant served request per second plateau that follows the increasing phase.
+This expectation outlines a prerequisite to the algorithm to work: after having reached the maximum performance, during an increasing load we must see a constant served request per second plateau that follows the increasing phase.
 
 
 ![alt text](images\1-evaluation.png "performance ladder")
@@ -28,7 +28,7 @@ End point detection with rulers: draw a line over the estimated average of the g
 
 ![alt text](images\3-req-sec-lines.png "endpoint recognition")
 
-In the algorithmic version the benchmark tool uses noise filter on the req/sec (blue line), and makes the (also noise filtered) differential function (red). 
+In the algorithmic version the benchmark tool uses a noise filter on the req/sec (blue line), and makes the (also noise filtered) differential function (red). 
 
 ![alt text](images\4-avg-diff.png "noise filtering and differential function")
 

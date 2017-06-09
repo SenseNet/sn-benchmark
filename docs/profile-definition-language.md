@@ -17,7 +17,7 @@ Path set is a technique that helps to use variable contents in the profiles. The
 
 #### Declaration
 
-The best place of the path set declarations at the top of the profile file but this is not mandatory. The declaration has three parts:
+The best place of the path set declarations is at the top of the profile file but this is not mandatory. The declaration has three parts:
 1. **Keyword**: this is the '*PATHSET:*'.
 2. **Name**: One word after the keyword separated by a space.
 3. **Definition**: this is a valid content query (in CQL).
@@ -26,7 +26,7 @@ It is strongly recommended to use AND / OR logical operators in the content quer
 
 #### Usage
 
-A PathSet reference have more parts. See the syntax:
+A PATHSET reference have more parts. See the syntax:
 ```text
 ##Name.Addressing[.Transformation]##
 ```
@@ -38,7 +38,7 @@ A PathSet reference have more parts. See the syntax:
     - **'Current'**: Stays on the current position.
     - **'Next'**: Increment the position 
     - **Direct index**: A non-negative integer number that ignores the profile's index.
-4.  **Transformation**: Transforms the actual path of the pathset
+4.  **Transformation**: Transforms the actual path of the path set
     - **Parent**: Leaves the last segment of the path. This transformation can be used in chain but should be used with caution because there is no any validation.
     - **ODataEntity**: Changes the last segment of the path to indexer. For example "/Root/Segment1/Segment2" will be transformed to "/Root/Segment1('Segment2')"
 5. **Finish**:  Two hashmark ('##').
