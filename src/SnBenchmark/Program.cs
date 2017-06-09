@@ -14,6 +14,7 @@ namespace SnBenchmark
     internal class Program
     {
         private enum MainState { Initial, Warmup, Measuring, Cooldown }
+        private static MainState _mainState;
 
         private static Configuration _configuration;
         private static List<string> _speedItems;
@@ -102,29 +103,59 @@ namespace SnBenchmark
             Console.WriteLine("Finished.                           ");
         }
 
-        private static void SavePathSet(PathSet pathSet)
+        private static async Task Run(List<Profile> initialProfiles, List<Profile> growingProfiles)
         {
-            var profileDir = EnsureProfileResponsesDirectory(pathSet.ProfileName);
-            var pathSetPath = Path.Combine(profileDir, $"{pathSet.Name}.pathset");
-            using (var writer = new StreamWriter(pathSetPath))
-                foreach (var path in pathSet.Paths)
-                    writer.WriteLine(path);
+            _growingProfiles = growingProfiles;
+
+            _timer = new System.Timers.Timer(1000.0);
+            _timer.Elapsed += Timer_Elapsed;
+            _timer.Disposed += Timer_Disposed;
+            _timer.Enabled = true;
+
+            WriteColumnHeaders(_speedItems);
+
+            // begin with starting the configured number of initial profiles as a warmup
+            AddAndStartProfiles(initialProfiles);
+            _mainState = MainState.Warmup;
+
+            await Task.Delay(_configuration.WarmupTime * 1000);
+
+            Console.WriteLine("================= MEASUREMENT  Press <x> to exit");
+
+            Web.RequestsPerSec = 0;
+            _mainState = MainState.Measuring;
+            _loadController = new LoadController(_configuration.GrowingTime);
+
+            // wait for the benchmark finished
+            while (!_finished)
+                await Task.Delay(1000);
+            _mainState = MainState.Cooldown;
+
+            var result = _loadController.Result;
+            if (result != null)
+            {
+                var benchmarkResult = FormatBenchmarkResult(result);
+                Console.WriteLine(benchmarkResult);
+                WriteToOutputFile(benchmarkResult);
+                WriteToOutputFile($"Max performance (RPS);{_loadController.MaxPerformance}");
+                WriteToOutputFile($"Sweet point (RPS);{_loadController.ExpectedPerformance}");
+            }
+
+            // wait for profiles that are still running to stop
+            await ShutdownProfiles();
+
+            _timer.Stop();
         }
 
-        private static string EnsureProfileResponsesDirectory(string profileName)
-        {
-            var dir = _configuration.ResponsesDirectoryPath;
-            var profileDir = Path.Combine(dir, profileName);
-            if (!Directory.Exists(profileDir))
-                Directory.CreateDirectory(profileDir);
-            return profileDir;
-        }
+        // =========================================================== Profile handling
 
-        private static List<Profile> InitializeProfiles(Dictionary<string, int> config,
-            out IDictionary<string, PathSetExpression[]> pathSetExpressions)
+        private static readonly List<Profile> RunningProfiles = new List<Profile>();
+        private static List<Profile> _growingProfiles;
+
+        private static List<Profile> InitializeProfiles(Dictionary<string, int> config, out IDictionary<string, PathSetExpression[]> pathSetExpressions)
         {
             var profilesDirectory = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Profiles"));
-            if(!Directory.Exists(profilesDirectory))
+            if (!Directory.Exists(profilesDirectory))
                 profilesDirectory = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../Profiles"));
             if (!Directory.Exists(profilesDirectory))
                 throw new ApplicationException("Profiles directory not found.");
@@ -172,80 +203,6 @@ namespace SnBenchmark
 
             using (var reader = new StreamReader(profileFiles[0]))
                 return reader.ReadToEnd();
-        }
-
-        private static readonly Dictionary<string, int> CurrentProfileComposition = new Dictionary<string, int>();
-        private static object _currentProfilesLock = new object();
-        private static string _currentProfileCompositionString;
-        private static readonly List<Profile> RunningProfiles = new List<Profile>();
-        private static List<Profile> _growingProfiles;
-
-        private static System.Timers.Timer _timer;
-
-        private static readonly object ErrorSync = new object();
-        private static MainState _mainState;
-        private static int _errorCount;
-        private static int _errorCountInWarmup;
-        public static void AddError(Exception e, Profile profile, int actionIndex, BenchmarkActionExpression action)
-        {
-            lock (ErrorSync)
-            {
-                WriteErrorToLog(e, profile, actionIndex, action);
-                if (_mainState == MainState.Warmup)
-                {
-                    _errorCountInWarmup++;
-                    Console.WriteLine(e.Message);
-                }
-                else
-                {
-                    _errorCount++;
-                    Console.WriteLine("{0}/{1}: {2}", +_errorCount, _configuration.MaxErrors, e.Message);
-                }
-            }
-        }
-
-        private static async Task Run(List<Profile> initialProfiles, List<Profile> growingProfiles)
-        {
-            _growingProfiles = growingProfiles;
-
-            _timer = new System.Timers.Timer(1000.0);
-            _timer.Elapsed += Timer_Elapsed;
-            _timer.Disposed += Timer_Disposed;
-            _timer.Enabled = true;
-
-            WriteColumnHeaders(_speedItems);
-
-            // begin with starting the configured number of initial profiles as a warmup
-            AddAndStartProfiles(initialProfiles);
-            _mainState = MainState.Warmup;
-
-            await Task.Delay(_configuration.WarmupTime * 1000);
-
-            Console.WriteLine("================= MEASUREMENT  Press <x> to exit");
-
-            Web.RequestsPerSec = 0;
-            _mainState = MainState.Measuring;
-            _loadController = new LoadController(_configuration.GrowingTime);
-
-            // wait for the benchmark finished
-            while (!_finished)
-                await Task.Delay(1000);
-            _mainState = MainState.Cooldown;
-
-            var result = _loadController.Result;
-            if (result != null)
-            {
-                var benchmarkResult = FormatBenchmarkResult(result);
-                Console.WriteLine(benchmarkResult);
-                WriteToOutputFile(benchmarkResult);
-                WriteToOutputFile($"Max performance (RPS);{_loadController.MaxPerformance}");
-                WriteToOutputFile($"Sweet point (RPS);{_loadController.ExpectedPerformance}");
-            }
-
-            // wait for profiles that are still running to stop
-            await ShutdownProfiles();
-
-            _timer.Stop();
         }
 
         private static void AddAndStartProfiles(List<Profile> profiles)
@@ -309,6 +266,9 @@ namespace SnBenchmark
             CurrentProfileCompositionToString();
         }
 
+        private static object _currentProfilesLock = new object();
+        private static string _currentProfileCompositionString;
+        private static readonly Dictionary<string, int> CurrentProfileComposition = new Dictionary<string, int>();
         private static void CurrentProfileCompositionToString()
         {
             lock (_currentProfilesLock)
@@ -316,10 +276,28 @@ namespace SnBenchmark
                     CurrentProfileComposition.Select(x => $"{x.Key}: {x.Value}").ToArray());
         }
 
+        // =========================================================== Test
+
         private static void TestProfiles(List<Profile> profiles)
         {
             foreach (var profile in profiles)
                 profile.Test(EnsureProfileResponsesDirectory(profile.Name));
+        }
+        private static void SavePathSet(PathSet pathSet)
+        {
+            var profileDir = EnsureProfileResponsesDirectory(pathSet.ProfileName);
+            var pathSetPath = Path.Combine(profileDir, $"{pathSet.Name}.pathset");
+            using (var writer = new StreamWriter(pathSetPath))
+                foreach (var path in pathSet.Paths)
+                    writer.WriteLine(path);
+        }
+        private static string EnsureProfileResponsesDirectory(string profileName)
+        {
+            var dir = _configuration.ResponsesDirectoryPath;
+            var profileDir = Path.Combine(dir, profileName);
+            if (!Directory.Exists(profileDir))
+                Directory.CreateDirectory(profileDir);
+            return profileDir;
         }
 
         // =========================================================== Write result output
@@ -340,6 +318,8 @@ namespace SnBenchmark
         }
 
         // ===================================================================== Clock
+
+        private static System.Timers.Timer _timer;
 
         private static void Timer_Disposed(object sender, EventArgs e)
         {
@@ -493,6 +473,30 @@ namespace SnBenchmark
             lock (OutputFileSync)
                 using (var writer = new StreamWriter(_outputFile, true))
                     writer.WriteLine(line.Replace('\t', ';'));
+        }
+
+        // =========================================================== Error handling
+
+
+        private static readonly object ErrorSync = new object();
+        private static int _errorCount;
+        private static int _errorCountInWarmup;
+        public static void AddError(Exception e, Profile profile, int actionIndex, BenchmarkActionExpression action)
+        {
+            lock (ErrorSync)
+            {
+                WriteErrorToLog(e, profile, actionIndex, action);
+                if (_mainState == MainState.Warmup)
+                {
+                    _errorCountInWarmup++;
+                    Console.WriteLine(e.Message);
+                }
+                else
+                {
+                    _errorCount++;
+                    Console.WriteLine("{0}/{1}: {2}", +_errorCount, _configuration.MaxErrors, e.Message);
+                }
+            }
         }
 
         // =========================================================== Error log
