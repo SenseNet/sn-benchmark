@@ -316,8 +316,8 @@ namespace SnBenchmark
                     ControllerState = State.MaxDetected;
                     return LoadControl.Stay;
                 case State.MaxDetected:
-                    ProgressValue = _sustainCounterMax * 2 - Counter;
-                    if (Counter < _sustainCounterMax * 2)
+                    ProgressValue = _sustainCounterMax - Counter;
+                    if (Counter < _sustainCounterMax)
                         return LoadControl.Stay;
 
                     Counter = 0;
