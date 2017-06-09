@@ -8,6 +8,7 @@ namespace SnBenchmark
         private readonly double _qSize;
         private readonly double[] _buffer;
         private int _index;
+        private bool _firstCycle = true;
 
         public double FilteredValue { get; private set; }
         public double MinValue => _buffer.Min();
@@ -22,10 +23,20 @@ namespace SnBenchmark
         public double NextValue(double value)
         {
             var last = _buffer[_index];
-            _buffer[_index] = value;
-            _index = (_index + 1) % _buffer.Length;
+            _buffer[_index++] = value;
 
-            FilteredValue += (value - last) / _qSize;
+            if (_firstCycle)
+            {
+                FilteredValue = _buffer.Take(_index).Average();
+                if (_index >= _buffer.Length)
+                    _firstCycle = false;
+            }
+            else
+            {
+                FilteredValue += (value - last)/_qSize;
+            }
+
+            _index %= _buffer.Length;
 
             return FilteredValue;
         }
