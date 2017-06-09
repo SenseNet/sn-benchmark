@@ -31,10 +31,13 @@ See an example **Visitor** profile below.
 
 ### Usage
 <a name="Usage"></a>
-There are a couple of *required* and *optional* parameters that you can define the behaviour of the tool.
+There are a couple of *required* and *optional* parameters that you can define the behaviour of the tool.  
+
+_Example:_
 ```text
-SnBenchmark.exe -PROFILE:"Visitor:10+5" -SITE:"http://localhost" -USR:admin -PWD:admin -WARMUP:10 -GROW:10 -LIMIT:"Normal:4.0;Slow:8.0"
+SnBenchmark.exe -PROFILE:"Visitor:10+5" -SITE:"http://localhost" -USR:admin -PWD:admin -WARMUP:10 -GROW:10
 ```
+#### Parameters
 Parameter order is irrelevant. Parameters have shorter aliases if you prefer them and names are case insensitive.
 Acknowledged parameter formats: *-NAME:value* or */NAME:value*
 
@@ -70,16 +73,8 @@ Warmup time in seconds. Default: 60. During this period the response times are n
 ##### GROWINGTIME (aliases: G, GROW, GROWING) - optional
 Length of a load period in seconds. Default: 30. Defines a time interval for executing profiles. After it expires, additional  profiles are added to the already running list. The growth rate (number of new profiles) is defined by the *PROFILE* parameter.
 
-##### LIMIT (alias: L) - optional
-Average *response time limits* per speed category in seconds (e.g.: NORMAL:4;FAST:2;SLOW:6.3). The speed category default is 10. Profiles can assign a speed category to every request definition. Undefined speed is the default: NORMAL.
-
-During benchmarking the average response times are calculated by speed category. If the average response time exceeds the category limit, the measuring will be terminated. The benchmark result is the average value *before* any limit has been reached. It is strongly recommended to define only a few categories (3-5 types max).
-
 ##### MAXERRORS (aliases: E, ERRORS) - optional
 Maximum allowed error count. Default: 10.
-
-##### VERBOSE (alias: V) - optional
-If set, a detailed benchmark measuring progress is written to the console. This parameter has no value.
 
 ##### OUTPUT (aliases: O, OUT) - optional
 Output file for further analysis in csv format. The file is always written to the disk. This parameter controls the output file's name an location. Default location is the *Output* subfolder in the appdomain's base folder (exe location).
@@ -96,7 +91,7 @@ The parameter value can contain one *asterisk* (*) as a placeholder character th
 -OUT:Benchmark_*.csv
 ```
 ##### TESTONLY (aliases: T, TEST) - optional
-Plays the initial profile cycle and saves the web responses into separated text files for debugging purposes. Limits, Warmup, Growing, Maxerrors, Verbose parameters are ignored. Using the benchmark tool with this parameter helps to validate the profiles. For example if the profile parameter is **"Profile1:2+2,Profile2:1+1"** and both profiles contain 2 requests, the following structure will be created in the output folder:
+Plays the initial profile cycle and saves the web responses into separated text files for debugging purposes. Warmup, Growing, Maxerrors parameters are ignored. Using the benchmark tool with this parameter helps to validate the profiles. For example if the profile parameter is **"Profile1:2+2,Profile2:1+1"** and both profiles contain 2 requests, the following structure will be created in the output folder:
 ```text
 Benchmark_2017-05-17_01-46-22   | directory for all trace files
     Profile1                    | directory for Profile1 responses
@@ -115,15 +110,27 @@ Response file name have an unique identifier (e.g. P2A1) that helps identify the
 #####  Console output
 Default:
 ```text
-Pcount  Active  NORMAL  SLOW
-                2,00    5,00
-10      0       0,00    0,00 ---- WARMUP  -----
-15      2       0,00    0,00 ---- GROWING -------------
+SnBenchmark 1.0.0.0
+
+Initializing profiles.
+Ok.
+Initializing path sets.
+  Getting paths: Downloader.BigFiles ... Ok. Count: 121
+Start.
+================= MEASUREMENT  Press <x> to exit
+INCREASE. 100; 30,834 RPS; 0,00; 0,00
+INCREASE. 105; 31,874 RPS; 1,27; 0,87
+INCREASE. 110; 32,349 RPS; 0,60; 0,66
+Performance max: 35,557; sweetpoint: 33,779
+DECREASE. 115; 35,557 RPS; 0,94; 0,91
+FINISHED.
+BENCHMARK RESULT: Profiles: 115 (Downloader: 92, Uploader50K: 23); RPS: 35,5572; All requests: 26515; Errors: 0; Response times: NORMAL: 0,941; SLOW: 0,907
+Finished.
 ```
 
 Verbose:
 ```text
-Pcount  Active  Req/sec NORMAL  SLOW    Lnormal Lslow
+Pcount  Active  RPS NORMAL  SLOW    Lnormal Lslow
 ---- WARMUP
 10      0       0       0,00    0,00    2,00    5,00
 10      3       4       0,00    0,00    2,00    5,00
