@@ -272,7 +272,7 @@ namespace SnBenchmark
         private static void CurrentProfileCompositionToString()
         {
             lock (_currentProfilesLock)
-                _currentProfileCompositionString = string.Join("; ",
+                _currentProfileCompositionString = string.Join(", ",
                     CurrentProfileComposition.Select(x => $"{x.Key}: {x.Value}").ToArray());
         }
 
