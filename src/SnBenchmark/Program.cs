@@ -335,7 +335,7 @@ namespace SnBenchmark
         private static void WriteColumnHeaders(IEnumerable<string> speedItems)
         {
             var speeds = speedItems.ToArray();
-            var outputHead = "Pcount;Active;RPS;RPSavg;RPSdiff;Triggered;Trace;" + string.Join(";", speeds) + ";" + string.Join(";", speeds.Select(i => "L" + i.ToLower()));
+            var outputHead = "Pcount;Active;RPS;RPSavg;RPSavg2;RPSdiff;Trigger;" + string.Join(";", speeds);
             WriteToOutputFile(outputHead);
         }
 
@@ -400,9 +400,9 @@ namespace SnBenchmark
             var detected = _loadController.TopValueDetected ? 1 : 0;
             var logLine = $"{profiles}\t{Web.ActiveRequests}\t{reqPerSec}\t" +
                 $"{filteredValue}\t" +
-                $"{diffValue * 200}\t" +
-                $"{detected * 100}\t" +
                 $"{_loadController.Trace}\t" +
+                $"{diffValue}\t" +
+                $"{detected}\t" +
                 $"{string.Join("\t", _averageResponseTime.Values.Select(d => d.ToString("0.00")).ToArray())}";
             WriteToOutputFile(logLine);
 
