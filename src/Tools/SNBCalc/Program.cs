@@ -22,35 +22,30 @@ namespace SNBCalc
 
         static void Run(string[] args)
         {
-            var path = args.FirstOrDefault(a => !a.Equals("-SUMMARY", StringComparison.InvariantCultureIgnoreCase));
-            var summary = args.Any(a => a.Equals("-SUMMARY", StringComparison.InvariantCultureIgnoreCase));
+            var path = args.FirstOrDefault();
             if (path == null)
             {
-                Console.WriteLine("One file or directory path expected. Optional switch: -SUMMARY");
+                Console.WriteLine("One file or directory path expected.");
                 return;
             }
 
             if (Directory.Exists(path))
             {
                 var summaryPath = Path.Combine(path, "summary.txt");
-                var paths = Directory.GetFiles(path, "*.csv")
-                    .Where(p => !Path.GetFileName(p).EndsWith(".calc.csv", StringComparison.OrdinalIgnoreCase));
+                var paths = Directory.GetFiles(path, "*.csv");
                 using (var summaryWriter = new StreamWriter(summaryPath, false))
+                {
+                    summaryWriter.WriteLine("Name\tTime\tMeasuring time (sec)\tProfiles\tComposition\tRPS\tAll requests\tErrors\tResponse times");
                     foreach (var file in paths)
-                        ProcessFile(file, summary, summaryWriter);
+                        ProcessFile(file, summaryWriter);
+                }
                 return;
             }
 
-            if (File.Exists(path))
-            {
-                ProcessFile(path, summary);
-                return;
-            }
-
-            Console.WriteLine("File or directory does not exist: " + path);
+            Console.WriteLine("Directory does not exist: " + path);
         }
 
-        static void ProcessFile(string path, bool summaryOnly, StreamWriter summaryWriter = null)
+        static void ProcessFile(string path, StreamWriter summaryWriter)
         {
             var fileName = Path.GetFileName(path);
             string nameSuffix;
@@ -58,64 +53,34 @@ namespace SNBCalc
 
             Console.WriteLine("Processing " + fileName);
 
-            var detector = new BenchmarkEndPointCalculator();
-
-            StreamWriter writer = null;
-            if (!summaryOnly)
+            using (var reader = new StreamReader(path))
             {
-                var outPath = Path.Combine(Path.GetDirectoryName(path), Path.GetFileNameWithoutExtension(fileName) + ".calc.csv");
-                writer = new StreamWriter(outPath, false);
-            }
-
-            try
-            {
-                using (var reader = new StreamReader(path))
+                string headLine;
+                string line;
+                while ((headLine = reader.ReadLine()) != null)
                 {
-                    string headLine;
-                    string line;
-                    while ((headLine = reader.ReadLine()) != null)
-                    {
-                        if (headLine.StartsWith("Pcount;"))
-                            break;
-                    }
-
-                    if (headLine == null)
-                    {
-                        Console.WriteLine("Headline not found.");
-                        return;
-                    }
-
-                    if (!summaryOnly)
-                    {
-                        writer.WriteLine("\"sep=;\"");
-                        headLine += ";;Pcount;Req/sec;InputAvg;DiffAvg;Trigger";
-                        writer.WriteLine(headLine);
-                    }
-
-                    var triggered = false;
-                    while ((line = reader.ReadLine()) != null)
-                    {
-                        if (line.StartsWith("BENCHMARK RESULT:"))
-                            break;
-
-                        bool trigger;
-                        var detected = detector.Detect(line, out trigger);
-                        if (!summaryOnly)
-                            writer.WriteLine(line + ";" + detected);
-
-                        if (trigger && !triggered)
-                        {
-                            triggered = true;
-                            var summaryRecord = GetSummaryRecord(name, nameSuffix, detected);
-                            Console.WriteLine("    " + summaryRecord);
-                            summaryWriter?.WriteLine(summaryRecord);
-                        }
-                    }
+                    if (headLine.StartsWith("Pcount;"))
+                        break;
                 }
-            }
-            finally
-            {
-                writer?.Dispose();
+
+                if (headLine == null)
+                {
+                    Console.WriteLine("Headline not found.");
+                    return;
+                }
+
+                var lineCount = 0;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (line.StartsWith("BENCHMARK RESULT:"))
+                    {
+                        var summaryRecord = GetSummaryRecord(name, nameSuffix, lineCount, line);
+                        //Console.WriteLine("    " + summaryRecord);
+                        summaryWriter.WriteLine(summaryRecord);
+                        break;
+                    }
+                    lineCount++;
+                }
             }
         }
 
@@ -130,10 +95,35 @@ namespace SNBCalc
             return name;
         }
 
-        private static string GetSummaryRecord(string name, string suffix, string data)
+        private static string GetSummaryRecord(string name, string suffix, int lineCount, string line)
         {
-            var d = data.Split(';');
-            return $"{name}\t{suffix}\t{d[0]}\t{d[2]}";
+            // "Profiles\tComposition\tRPS\tAll requests\tErrors\tResponse times"
+            var data = line.Split(';');
+
+            // Profiles
+            var profileData = data[0].Replace("BENCHMARK RESULT:", "")
+                .Replace("Profiles:", "")
+                .Split(new[] {'(', ')'}, StringSplitOptions.RemoveEmptyEntries);
+            var profiles = profileData[0].Trim();
+            var composition = profileData[1].Trim();
+
+            // rps
+            var rps = data[1].Replace("RPS:", "").Trim();
+
+            // All requests
+            var allRequests = data[2].Replace("All requests:", "").Trim();
+
+            // Errors
+            var errors = data[3].Replace("Errors:", "").Trim();
+
+            // Response times
+            var responseTimes = string
+                .Join("\t", data.Skip(4).ToArray())
+                .Replace("Response times:", "")
+                .Replace(":", "\t")
+                .Trim();
+
+            return $"{name}\t{suffix}\t{lineCount}\t{profiles}\t{composition}\t{rps}\t{allRequests}\t{errors}\t{responseTimes}";
         }
 
     }

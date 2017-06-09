@@ -137,9 +137,9 @@ namespace SnBenchmark
             {
                 var path1 = path.Substring(0, lastSlash);
                 var path2 = path.Substring(lastSlash + 1);
-                return string.Format("{0}('{1}')", path1, path2);
+                return $"{path1}('{path2}')";
             }
-            return string.Format("/('{0}')", path.TrimStart('/'));
+            return $"/('{path.TrimStart('/')}')";
         }
     }
 }

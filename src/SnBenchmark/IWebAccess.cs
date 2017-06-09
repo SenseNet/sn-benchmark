@@ -40,7 +40,7 @@ namespace SnBenchmark
         /// At the end of a period this method resets time values and returns the average
         /// values collected in that period for all speed categories.
         /// </summary>
-        Dictionary<string, double> GetPeriodDataAndReset();
+        Dictionary<string, double> GetAverageResponseStringAndReset();
 
         string[] GetRequestLog();
     }

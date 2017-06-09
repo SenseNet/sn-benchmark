@@ -69,6 +69,9 @@
   </Choose>
   <ItemGroup>
     <Compile Include="ArgumentTests.cs" />
+    <Compile Include="LoadControlTests\WebServerSimulator.cs" />
+    <Compile Include="LoadControlTests\WebServerSimulatorTests.cs" />
+    <Compile Include="NoiseFilterTests.cs" />
     <Compile Include="PathSetTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestWebAccess.cs" />

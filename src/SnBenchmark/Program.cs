@@ -8,19 +8,22 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using SenseNet.Tools.CommandLineArguments;
-using SNBCalc;
 
 namespace SnBenchmark
 {
     internal class Program
     {
+        private enum MainState { Initial, Warmup, Measuring, Cooldown }
+        private static MainState _mainState;
+
         private static Configuration _configuration;
         private static List<string> _speedItems;
-        private static Dictionary<string, double> _limits;
+        private static Dictionary<string, double> _averageResponseTime;
+        private static string _averageResponseTimeString;
 
         private static void Main(string[] args)
         {
-            ServicePointManager.DefaultConnectionLimit = 300;
+            ServicePointManager.DefaultConnectionLimit = 1500;
 
             _configuration = new Configuration();
 
@@ -34,6 +37,7 @@ namespace SnBenchmark
                 else
                 {
                     Console.WriteLine(result.GetAppNameAndVersion());
+                    Console.WriteLine();
                     Run();
                 }
             }
@@ -96,32 +100,62 @@ namespace SnBenchmark
 
             WriteRequestLog();
 
-            Console.WriteLine("Finished.");
+            Console.WriteLine("Finished.                           ");
         }
 
-        private static void SavePathSet(PathSet pathSet)
+        private static async Task Run(List<Profile> initialProfiles, List<Profile> growingProfiles)
         {
-            var profileDir = EnsureProfileResponsesDirectory(pathSet.ProfileName);
-            var pathSetPath = Path.Combine(profileDir, $"{pathSet.Name}.pathset");
-            using (var writer = new StreamWriter(pathSetPath))
-                foreach (var path in pathSet.Paths)
-                    writer.WriteLine(path);
+            _growingProfiles = growingProfiles;
+
+            _timer = new System.Timers.Timer(1000.0);
+            _timer.Elapsed += Timer_Elapsed;
+            _timer.Disposed += Timer_Disposed;
+            _timer.Enabled = true;
+
+            WriteColumnHeaders(_speedItems);
+
+            // begin with starting the configured number of initial profiles as a warmup
+            AddAndStartProfiles(initialProfiles);
+            _mainState = MainState.Warmup;
+
+            await Task.Delay(_configuration.WarmupTime * 1000);
+
+            Console.WriteLine("================= MEASUREMENT  Press <x> to exit");
+
+            Web.RequestsPerSec = 0;
+            _mainState = MainState.Measuring;
+            _loadController = new LoadController(_configuration.GrowingTime);
+
+            // wait for the benchmark finished
+            while (!_finished)
+                await Task.Delay(1000);
+            _mainState = MainState.Cooldown;
+
+            var result = _loadController.Result;
+            if (result != null)
+            {
+                var benchmarkResult = FormatBenchmarkResult(result);
+                Console.WriteLine(benchmarkResult);
+                WriteToOutputFile(benchmarkResult);
+                WriteToOutputFile($"Max performance (RPS);{_loadController.MaxPerformance}");
+                WriteToOutputFile($"Sweet point (RPS);{_loadController.ExpectedPerformance}");
+            }
+
+            // wait for profiles that are still running to stop
+            await ShutdownProfiles();
+
+            _timer.Stop();
         }
 
-        private static string EnsureProfileResponsesDirectory(string profileName)
-        {
-            var dir = _configuration.ResponsesDirectoryPath;
-            var profileDir = Path.Combine(dir, profileName);
-            if (!Directory.Exists(profileDir))
-                Directory.CreateDirectory(profileDir);
-            return profileDir;
-        }
+        // =========================================================== Profile handling
 
-        private static List<Profile> InitializeProfiles(Dictionary<string, int> config,
-            out IDictionary<string, PathSetExpression[]> pathSetExpressions)
+        private static readonly List<Profile> RunningProfiles = new List<Profile>();
+        private static List<Profile> _growingProfiles;
+
+        private static List<Profile> InitializeProfiles(Dictionary<string, int> config, out IDictionary<string, PathSetExpression[]> pathSetExpressions)
         {
             var profilesDirectory = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Profiles"));
-            if(!Directory.Exists(profilesDirectory))
+            if (!Directory.Exists(profilesDirectory))
                 profilesDirectory = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../Profiles"));
             if (!Directory.Exists(profilesDirectory))
                 throw new ApplicationException("Profiles directory not found.");
@@ -150,8 +184,11 @@ namespace SnBenchmark
             }
 
             _speedItems = speedItems;
+            _averageResponseTime = new Dictionary<string, double>();
+            foreach (var key in speedItems)
+                _averageResponseTime.Add(key, 0.0);
+            AverageResponseTimeToString();
 
-            CreateLimitsAndInitialPeriodData(speedItems);
             Web.Initialize(speedItems);
 
             return profiles;
@@ -167,168 +204,20 @@ namespace SnBenchmark
             using (var reader = new StreamReader(profileFiles[0]))
                 return reader.ReadToEnd();
         }
-        private static void CreateLimitsAndInitialPeriodData(IEnumerable<string> speedItems)
-        {
-            _limits = new Dictionary<string, double>();
-            _periodData = new Dictionary<string, double>();
-            var config = _configuration.Limits;
-            foreach (var key in speedItems)
-            {
-                double value;
-                if (!config.TryGetValue(key, out value))
-                    value = Configuration.DefaultLimitValue;
-                _limits.Add(key, value);
-                _periodData.Add(key, 0.0);
-            }
-        }
 
-        private static readonly List<Profile> RunningProfiles = new List<Profile>();
-        private static BenchmarkEndPointCalculator _endPointDetector;
-        private static int _endPointDetected;
-        private static System.Timers.Timer _timer;
-        public static int StoppedProfiles { get; set; }
-
-        private static readonly object ErrorSync = new object();
-        private static bool _isInWarmup;
-        private static int _errorCount;
-        private static int _errorCountInWarmup;
-        public static void AddError(Exception e, Profile profile, int actionIndex, BenchmarkActionExpression action)
-        {
-            lock (ErrorSync)
-            {
-                WriteErrorToLog(e, profile, actionIndex, action);
-                if (_isInWarmup)
-                {
-                    _errorCountInWarmup++;
-                    Console.WriteLine(e.Message);
-                }
-                else
-                {
-                    _errorCount++;
-                    Console.WriteLine("{0}/{1}: {2}", +_errorCount, _configuration.MaxErrors, e.Message);
-                }
-            }
-        }
-
-        private static async Task Run(List<Profile> initialProfiles, List<Profile> growingProfiles)
-        {
-            _endPointDetector = new BenchmarkEndPointCalculator();
-
-            _timer = new System.Timers.Timer(1000.0);
-            _timer.Elapsed += Timer_Elapsed;
-            _timer.Disposed += Timer_Disposed;
-            _timer.Enabled = true;
-
-            _isInWarmup = true;
-
-            WriteColumnHeaders(_speedItems);
-
-            // begin with starting the configured number of initial profiles as a warmup
-            AddAndStartProfiles(initialProfiles);
-            Monitor("---- WARMUP  ");
-
-            await Task.Delay(_configuration.WarmupTime * 1000);
-
-            var boundaryConditionHaveBeenFulfilled = false;
-            _isInWarmup = false;
-
-            Console.WriteLine();
-            Console.Write("Press <x> to exit");
-
-            // start more profiles periodically, while the terminating conditions are not fulfilled
-            var exit = false;
-            while (!boundaryConditionHaveBeenFulfilled)
-            {
-                AddAndStartProfiles(growingProfiles);
-                Monitor("---- GROWING ");
-
-                for (int i = 0; i < 100; i++)
-                {
-                    if (Console.KeyAvailable)
-                    {
-                        var key = Console.ReadKey(true);
-                        if (key.KeyChar == 'x')
-                        {
-                            exit = true;
-                            break;
-                        }
-                    }
-                    await Task.Delay(_configuration.GrowingTime * 10);
-                }
-                if (exit)
-                    break;
-
-                boundaryConditionHaveBeenFulfilled = CheckBoundaryConditions(_limits);
-            }
-
-            if(exit)
-                Console.WriteLine("Interrupted with EXIT key.");
-
-            var benchmarkResult = "BENCHMARK RESULT: " + (_lastBenchmarkResult ?? _benchmarkResult) + " Total errors: " + (_errorCountInWarmup + _errorCount);
-            if (!_configuration.Verbose)
-                Console.WriteLine();
-            Console.WriteLine(benchmarkResult);
-
-            WriteToOutputFile(benchmarkResult);
-
-            Monitor("---- STOPPING");
-
-            // wait for profiles that are still running to stop
-            await ShutdownProfiles();
-
-            _timer.Stop();
-            Console.WriteLine();
-        }
-
-
-        private static async Task ShutdownProfiles()
-        {
-            foreach (var runningProfile in RunningProfiles)
-                runningProfile.Stop();
-
-            var lastCounts = new Queue<int>();
-            while (true)
-            {
-                var running = RunningProfiles.Count - StoppedProfiles;
-                if (running == 0)
-                    break;
-
-                lastCounts.Enqueue(running);
-                if (lastCounts.Count > 5)
-                {
-                    lastCounts.Dequeue();
-                    if (lastCounts.First() == lastCounts.Last())
-                        break;
-                }
-
-                await Task.Delay(1000);
-            }
-        }
-
-        private static void Timer_Disposed(object sender, EventArgs e)
-        {
-            _timer.Elapsed -= Timer_Elapsed;
-            _timer.Disposed -= Timer_Disposed;
-        }
-        private static void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            Monitor();
-        }
-
-        private static readonly Dictionary<string, int> ActualProfileCounts = new Dictionary<string, int>();
         private static void AddAndStartProfiles(List<Profile> profiles)
         {
             foreach (var profile in profiles)
             {
                 int actualCount;
-                if (!ActualProfileCounts.TryGetValue(profile.Name, out actualCount))
-                    ActualProfileCounts[profile.Name] = 0;
+                if (!CurrentProfileComposition.TryGetValue(profile.Name, out actualCount))
+                    CurrentProfileComposition[profile.Name] = 0;
 
                 var limit = _configuration.ProfileLimits[profile.Name];
                 if (limit > 0 && actualCount >= limit)
                     continue;
 
-                ActualProfileCounts[profile.Name]++;
+                CurrentProfileComposition[profile.Name]++;
 
                 // clone the profile to avoid modifying the original version
                 var newProfile = profile.Clone();
@@ -338,106 +227,219 @@ namespace SnBenchmark
 #pragma warning disable CS4014
                 newProfile.ExecuteAsync();
 #pragma warning restore CS4014
+
+            }
+            CurrentProfileCompositionToString();
+        }
+        private static void StopProfiles(List<Profile> profiles)
+        {
+            foreach (var profile in profiles)
+                RunningProfiles.FirstOrDefault(p=>p.Name == profile.Name && p.Running)?.Stop();
+        }
+        private static async Task ShutdownProfiles()
+        {
+            foreach (var runningProfile in RunningProfiles)
+                runningProfile.Stop();
+
+            var lastCounts = new Queue<int>();
+            while (true)
+            {
+                var running = RunningProfiles.Count;
+                if (running == 0)
+                    break;
+
+                lastCounts.Enqueue(running);
+                if (lastCounts.Count > 30)
+                {
+                    lastCounts.Dequeue();
+                    if (lastCounts.First() == lastCounts.Last())
+                        break;
+                }
+
+                await Task.Delay(1000);
             }
         }
+        public static void ProfileStopped(Profile profile)
+        {
+            RunningProfiles.Remove(profile);
+            CurrentProfileComposition[profile.Name]--;
+            CurrentProfileCompositionToString();
+        }
+
+        private static object _currentProfilesLock = new object();
+        private static string _currentProfileCompositionString;
+        private static readonly Dictionary<string, int> CurrentProfileComposition = new Dictionary<string, int>();
+        private static void CurrentProfileCompositionToString()
+        {
+            lock (_currentProfilesLock)
+                _currentProfileCompositionString = string.Join(", ",
+                    CurrentProfileComposition.Select(x => $"{x.Key}: {x.Value}").ToArray());
+        }
+
+        // =========================================================== Test
+
         private static void TestProfiles(List<Profile> profiles)
         {
             foreach (var profile in profiles)
                 profile.Test(EnsureProfileResponsesDirectory(profile.Name));
         }
-
-        private static Dictionary<string, double> _periodData;
-        private static string _lastBenchmarkResult;
-        private static string _benchmarkResult;
-        private static bool CheckBoundaryConditions(Dictionary<string, double> limits)
+        private static void SavePathSet(PathSet pathSet)
         {
-            _periodData = Web.GetPeriodDataAndReset();
-            _lastBenchmarkResult = _benchmarkResult;
-            _benchmarkResult = FormatBenchmarkResult(RunningProfiles, _periodData);
-            var finished = _periodData.Any(x => x.Value >= limits[x.Key])
-                           || _errorCount >= _configuration.MaxErrors
-                           || _endPointDetected >= 3;
-            return finished;
+            var profileDir = EnsureProfileResponsesDirectory(pathSet.ProfileName);
+            var pathSetPath = Path.Combine(profileDir, $"{pathSet.Name}.pathset");
+            using (var writer = new StreamWriter(pathSetPath))
+                foreach (var path in pathSet.Paths)
+                    writer.WriteLine(path);
+        }
+        private static string EnsureProfileResponsesDirectory(string profileName)
+        {
+            var dir = _configuration.ResponsesDirectoryPath;
+            var profileDir = Path.Combine(dir, profileName);
+            if (!Directory.Exists(profileDir))
+                Directory.CreateDirectory(profileDir);
+            return profileDir;
         }
 
-        //=========================================================== Write result output
+        // =========================================================== Write result output
 
-        private static string FormatBenchmarkResult(List<Profile> profiles, Dictionary<string, double> avgResponseTimesInSec)
+        private static string FormatBenchmarkResult(PerformanceRecord result)
         {
-            return $"{profiles.Count} profiles ({string.Join(", ", RunningProfiles.GroupBy(x => x.Name).Select(g => "" + g.Key + ":" + g.Count()))}), " + 
-                $"all requests:{Web.AllRequests}, errors:{_errorCount}, " +
-                $"average response times: {string.Join(", ", avgResponseTimesInSec.Select(y => $"{y.Key}:{y.Value:0.00}"))}.";
+            return $"BENCHMARK RESULT: Profiles: {result.Profiles} ({result.ProfileComposition}); " +
+                   $"RPS: {result.AverageRequestsPerSec:0.####}; " +
+                   $"All requests: {Web.AllRequests}; " +
+                   $"Errors: {_errorCount + _errorCountInWarmup}; " +
+                   $"Response times: {result.AverageResponseTime}";
         }
         private static void WriteColumnHeaders(IEnumerable<string> speedItems)
         {
             var speeds = speedItems.ToArray();
-            if (_configuration.Verbose)
-            {
-                Console.WriteLine("Pcount\tActive\tReq/sec\tEPDout\tTriggered\t" + string.Join("\t", speeds) + "\t" + string.Join("\t", speeds.Select(i => "L" + i.ToLower())));
-            }
-            else
-            {
-                Console.WriteLine("Pcount\tActive\t" + string.Join("\t", speeds));
-                Console.WriteLine("\t\t" + string.Join("\t", _limits.Values.Select(d => d.ToString("0.00")).ToArray()));
-            }
-
-            var outputHead = "Pcount;Active;Req/sec;EPDout;Triggered;" + string.Join(";", speeds) + ";" + string.Join(";", speeds.Select(i => "L" + i.ToLower()));
-
+            var outputHead = "Pcount;Active;RPS;RPSavg;RPSavg2;RPSdiff;Trigger;" + string.Join(";", speeds);
             WriteToOutputFile(outputHead);
         }
 
-        public static bool Pausing;
-        private static void Monitor(string consoleMessage = null)
+        // ===================================================================== Clock
+
+        private static System.Timers.Timer _timer;
+
+        private static void Timer_Disposed(object sender, EventArgs e)
         {
-            var requestsPerSec = Web.RequestsPerSec;
-            var endpointDetected = _endPointDetector.Detect(requestsPerSec);
-            if (endpointDetected)
-                _endPointDetected++;
+            _timer.Elapsed -= Timer_Elapsed;
+            _timer.Disposed -= Timer_Disposed;
+        }
 
-            var logLine = $"{RunningProfiles.Count - StoppedProfiles}\t{Web.ActiveRequests}\t{Web.RequestsPerSec}\t" +
-                $"{_endPointDetector.CurrentValue * 100}\t" +
-                $"{(endpointDetected ? 100 : 0)}\t" +
-                $"{string.Join("\t", _periodData.Values.Select(d => d.ToString("0.00")).ToArray())}\t" + 
-                $"{string.Join("\t", _limits.Values.Select(d => d.ToString("0.00")).ToArray())}\t{(Pausing ? "pause" : "")}";                                                           // 5
+        private static bool _working;
+        private static void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            if (_working)
+                return;
 
-            WriteToOutputFile(logLine);
-
-            if (_configuration.Verbose)
+            _working = true;
+            switch (_mainState)
             {
-                if (consoleMessage != null)
-                    Console.WriteLine(consoleMessage);
-                Console.WriteLine(logLine);
+                case MainState.Initial:
+                    break;
+                case MainState.Warmup:
+                    Warmup();
+                    break;
+                case MainState.Measuring:
+                    Measuring();
+                    break;
+                case MainState.Cooldown:
+                    Cooldown();
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
-            else
-            {
-                if (consoleMessage != null)
-                {
-                    var msg = $"{RunningProfiles.Count - StoppedProfiles}\t{Web.ActiveRequests}\t" + 
-                        $"{string.Join("\t", _periodData.Values.Select(d => d.ToString("0.00")).ToArray())}";
+            _working = false;
+        }
 
-                    Console.WriteLine();
-                    Console.Write(msg);
-                    Console.Write(" ");
-                    Console.Write(consoleMessage);
-                }
-                else
-                {
-                    Console.Write(endpointDetected ? "|" : "-");
-                }
-            }
+        private static bool _finished;
+        private static LoadController _loadController;
 
+        private static int _warmupCounter;
+        private static void Warmup()
+        {
+            Console.Write($"Warmup: {_configuration.WarmupTime - _warmupCounter++}     \r");
+        }
+        private static void Cooldown()
+        {
+            Console.Write($"Waiting for {RunningProfiles.Count} profiles stopped.     \r");
+        }
+
+        private static double _maxPerformance;
+        private static void Measuring()
+        {
+            var reqPerSec = Web.RequestsPerSec;
             Web.RequestsPerSec = 0;
 
-            // ReSharper disable once InvertIf
+            var profiles = RunningProfiles.Count;
+            _loadController.Progress(reqPerSec, profiles, _currentProfileCompositionString, _averageResponseTimeString);
+
+            var filteredValue = _loadController.FilteredRequestsPerSec;
+            var diffValue = _loadController.DiffValue;
+            var detected = _loadController.TopValueDetected ? 1 : 0;
+            var logLine = $"{profiles}\t{Web.ActiveRequests}\t{reqPerSec}\t" +
+                $"{filteredValue}\t" +
+                $"{_loadController.Trace}\t" +
+                $"{diffValue}\t" +
+                $"{detected}\t" +
+                $"{string.Join("\t", _averageResponseTime.Values.Select(d => d.ToString("0.00")).ToArray())}";
+            WriteToOutputFile(logLine);
+
+            var loadControl = _loadController.Next();
+            switch (loadControl)
+            {
+                case LoadControlCommand.Stay:
+                    Console.Write($"Working {_loadController.ProgressValue}       \r");
+                    break;
+                case LoadControlCommand.Exit:
+                    Console.WriteLine("FINISHED.");
+                    _finished = true;
+                    break;
+                case LoadControlCommand.Increase:
+                    var speedTrace = string.Join("; ", _averageResponseTime.Values.Select(d => d.ToString("0.00")).ToArray());
+                    Console.WriteLine($"INCREASE. {RunningProfiles.Count}; {_loadController.AveragePerformanceHistory.Last().AverageRequestsPerSec:0.000} RPS; {speedTrace}");
+                    _averageResponseTime = Web.GetAverageResponseStringAndReset();
+                    AverageResponseTimeToString();
+                    AddAndStartProfiles(_growingProfiles);
+                    break;
+                case LoadControlCommand.Decrease:
+                    if (Math.Abs(_loadController.MaxPerformance - _maxPerformance) > 0.000001d )
+                    {
+                        Console.WriteLine($"Performance max: {_loadController.MaxPerformance:0.000}; sweetpoint: {_loadController.ExpectedPerformance:0.000}");
+                        _maxPerformance = _loadController.MaxPerformance;
+                    }
+                    speedTrace = string.Join("; ", _averageResponseTime.Values.Select(d => d.ToString("0.00")).ToArray());
+                    Console.WriteLine($"DECREASE. {RunningProfiles.Count}; {_loadController.AveragePerformanceHistory.Last().AverageRequestsPerSec:0.000} RPS; {speedTrace}");
+                    _averageResponseTime = Web.GetAverageResponseStringAndReset();
+                    AverageResponseTimeToString();
+                    StopProfiles(_growingProfiles);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("Unknown load control: " + loadControl);
+            }
+
+            if(_errorCount >= _configuration.MaxErrors)
+                _finished = true;
+
             if (Console.KeyAvailable)
             {
-                var x = Console.ReadKey(true);
-                if (x.KeyChar == ' ')
-                    Pausing = !Pausing;
+                var key = Console.ReadKey(true);
+                if (key.KeyChar == 'x')
+                {
+                    Console.WriteLine("Interrupted by <x> key.");
+                    WriteToOutputFile("Interrupted by <x> key.");
+                    _finished = true;
+                }
             }
         }
 
-        //=========================================================== Output file
+        private static void AverageResponseTimeToString()
+        {
+            _averageResponseTimeString = string.Join("; ", _averageResponseTime.Select(x => $"{x.Key}: {x.Value:0.###}").ToArray());
+        }
+
+        // ===================================================================== Output file
 
         private static readonly object OutputFileSync = new object();
         private static string _outputFile;
@@ -461,7 +463,6 @@ namespace SnBenchmark
                     wr.WriteLine("Initial profiles:;{0}", string.Join(Environment.NewLine + ";", configuration.InitialProfiles.Select(x => x.Key + ";" + x.Value)));
                     wr.WriteLine("Growing profiles:;{0}", string.Join(Environment.NewLine + ";", configuration.GrowingProfiles.Select(x => x.Key + ";" + x.Value)));
                     wr.WriteLine("Growing time:;{0}", configuration.GrowingTime);
-                    wr.WriteLine("Limits:;{0}", string.Join(Environment.NewLine + ";", configuration.Limits.Select(x => x.Key + ";" + x.Value)));
                     wr.WriteLine("Max error count:;{0}", _configuration.MaxErrors);
                     wr.WriteLine();
                 }
@@ -474,7 +475,31 @@ namespace SnBenchmark
                     writer.WriteLine(line.Replace('\t', ';'));
         }
 
-        //=========================================================== Error log
+        // =========================================================== Error handling
+
+
+        private static readonly object ErrorSync = new object();
+        private static int _errorCount;
+        private static int _errorCountInWarmup;
+        public static void AddError(Exception e, Profile profile, int actionIndex, BenchmarkActionExpression action)
+        {
+            lock (ErrorSync)
+            {
+                WriteErrorToLog(e, profile, actionIndex, action);
+                if (_mainState == MainState.Warmup)
+                {
+                    _errorCountInWarmup++;
+                    Console.WriteLine(e.Message);
+                }
+                else
+                {
+                    _errorCount++;
+                    Console.WriteLine("{0}/{1}: {2}", +_errorCount, _configuration.MaxErrors, e.Message);
+                }
+            }
+        }
+
+        // =========================================================== Error log
 
         private static readonly object ErrorFileSync = new object();
         private static string _errorFile;
@@ -494,7 +519,7 @@ namespace SnBenchmark
                 }
 
                 using (var writer = new StreamWriter(_errorFile, true))
-                    writer.WriteLine(ErrorFormat, ++_loggedErrorCount, _isInWarmup ? "(WARMUP)" : "", actionIndex, profile.Name,
+                    writer.WriteLine(ErrorFormat, ++_loggedErrorCount, _mainState == MainState.Warmup ? "(WARMUP)" : "", actionIndex, profile.Name,
                         profile.Id, action, GetExceptionInfo(e));
             }
         }

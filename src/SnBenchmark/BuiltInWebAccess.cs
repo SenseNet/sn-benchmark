@@ -49,14 +49,10 @@ namespace SnBenchmark
         /// </summary>
         public async Task<string> RequestAsync(string actionId, ServerContext server, string speedItem, string httpMethod, string url, string requestBody)
         {
-            if (Program.Pausing)
-                return null;
-
             url += (url.Contains("?") ? "&" : "?") + "benchamrkId=" + actionId;
             var startTime = DateTime.UtcNow;
             Interlocked.Increment(ref _activeRequests);
             _allRequests++;
-            _requestsPerSec++;
 
             var method = new HttpMethod(httpMethod);
 
@@ -66,6 +62,7 @@ namespace SnBenchmark
                 var data = requestBody?.Length > 100 ? requestBody.Substring(0, 100) + "..." : requestBody;
                 LogRequest(data == null ? $"{httpMethod} {url}" : $"{httpMethod} {url} | {data}");
                 responseString = await RESTCaller.GetResponseStringAsync(new Uri(url), server, method, requestBody);
+                _requestsPerSec++;
             }
             finally
             {
@@ -90,9 +87,6 @@ namespace SnBenchmark
         public async Task<Content> UploadAsync(string actionId, ServerContext server, string speedItem, string targetContainerPath, string fileName,
             Stream stream)
         {
-            if (Program.Pausing)
-                return null;
-
             var startTime = DateTime.UtcNow;
             Interlocked.Increment(ref _activeRequests);
             _allRequests++;
@@ -157,7 +151,7 @@ namespace SnBenchmark
         /// At the end of a period this method resets time values and returns the average
         /// values collected in that period for all speed categories.
         /// </summary>
-        public Dictionary<string, double> GetPeriodDataAndReset()
+        public Dictionary<string, double> GetAverageResponseStringAndReset()
         {
             Dictionary<string, List<TimeSpan>> responseTimes;
             lock (_periodResponseTimes)
