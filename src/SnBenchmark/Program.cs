@@ -225,7 +225,7 @@ namespace SnBenchmark
 
             Web.RequestsPerSec = 0;
             _mainState = MainState.Measuring;
-            _loadController = new ProfileFinderLoadController2(_configuration.GrowingTime);
+            _loadController = new LoadController(_configuration.GrowingTime);
 
             // wait for the benchmark finished
             while (!_finished)
@@ -329,7 +329,7 @@ namespace SnBenchmark
             return $"BENCHMARK RESULT: Profiles: {result.Profiles} ({result.ProfileComposition}); " +
                    $"RPS: {result.AverageRequestsPerSec:0.####}; " +
                    $"All requests: {Web.AllRequests}; " +
-                   $"Errors: {_errorCount}; " +
+                   $"Errors: {_errorCount + _errorCountInWarmup}; " +
                    $"Response times: {result.AverageResponseTime}";
         }
         private static void WriteColumnHeaders(IEnumerable<string> speedItems)
@@ -374,7 +374,7 @@ namespace SnBenchmark
         }
 
         private static bool _finished;
-        private static ProfileFinderLoadController2 _loadController;
+        private static LoadController _loadController;
 
         private static int _warmupCounter;
         private static void Warmup()
@@ -409,21 +409,21 @@ namespace SnBenchmark
             var loadControl = _loadController.Next();
             switch (loadControl)
             {
-                case LoadControl.Stay:
+                case LoadControlCommand.Stay:
                     Console.Write($"Working {_loadController.ProgressValue}       \r");
                     break;
-                case LoadControl.Exit:
+                case LoadControlCommand.Exit:
                     Console.WriteLine("FINISHED.");
                     _finished = true;
                     break;
-                case LoadControl.Increase:
+                case LoadControlCommand.Increase:
                     var speedTrace = string.Join("; ", _averageResponseTime.Values.Select(d => d.ToString("0.00")).ToArray());
                     Console.WriteLine($"INCREASE. {RunningProfiles.Count}; {_loadController.AveragePerformanceHistory.Last().AverageRequestsPerSec:0.000} RPS; {speedTrace}");
                     _averageResponseTime = Web.GetAverageResponseStringAndReset();
                     AverageResponseTimeToString();
                     AddAndStartProfiles(_growingProfiles);
                     break;
-                case LoadControl.Decrease:
+                case LoadControlCommand.Decrease:
                     if (Math.Abs(_loadController.MaxPerformance - _maxPerformance) > 0.000001d )
                     {
                         Console.WriteLine($"Performance max: {_loadController.MaxPerformance:0.000}; sweetpoint: {_loadController.ExpectedPerformance:0.000}");

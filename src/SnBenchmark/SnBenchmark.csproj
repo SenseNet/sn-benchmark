@@ -73,6 +73,7 @@
     <Compile Include="Expression\WaitExpression.cs" />
     <Compile Include="IWebAccess.cs" />
     <Compile Include="LoadController.cs" />
+    <Compile Include="LoadControllerBase.cs" />
     <Compile Include="MaxPerformanceDetector.cs" />
     <Compile Include="NoiseFilter.cs" />
     <Compile Include="Parser\Lexer.cs" />
