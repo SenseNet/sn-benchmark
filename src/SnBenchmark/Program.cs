@@ -225,7 +225,7 @@ namespace SnBenchmark
 
             Web.RequestsPerSec = 0;
             _mainState = MainState.Measuring;
-            _loadController = new ProfileFinderLoadController2();
+            _loadController = new ProfileFinderLoadController2(_configuration.GrowingTime);
 
             // wait for the benchmark finished
             while (!_finished)

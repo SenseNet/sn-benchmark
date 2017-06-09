@@ -15,19 +15,19 @@ namespace SnBenchmarkTest.LoadControlTests
         [TestMethod]
         public void WebServerSimulator_SustainPerformanceLoadController()
         {
-            var loadController = new SustainPerformanceLoadController(600);
+            var loadController = new SustainPerformanceLoadController(30, 600);
             TestLoadController(new WebServerSimulator(50, 100), loadController, 10, 4);
         }
         [TestMethod]
         public void WebServerSimulator_SawToothLoadController_Dec()
         {
-            var loadController = new SawToothLoadController(true);
+            var loadController = new SawToothLoadController(30, true);
             TestLoadController(new WebServerSimulator(50, 100), loadController, 10, 4);
         }
         [TestMethod]
         public void WebServerSimulator_SawToothLoadController()
         {
-            var loadController = new SawToothLoadController(false);
+            var loadController = new SawToothLoadController(30, false);
             TestLoadController(new WebServerSimulator(50, 100), loadController, 10, 4);
         }
 
@@ -72,7 +72,7 @@ namespace SnBenchmarkTest.LoadControlTests
             var result = new List<PerformanceRecord>();
             for (int i = 0; i < 20; i++)
             {
-                var loadController = new ProfileFinderLoadController();
+                var loadController = new ProfileFinderLoadController(30);
                 TestLoadController(new WebServerSimulator(50, 60), loadController, 10, 1, false);
                 result.Add(loadController.Result);
             }
@@ -80,7 +80,7 @@ namespace SnBenchmarkTest.LoadControlTests
         [TestMethod]
         public void WebServerSimulator_ProfileFinderLoadController_Trace()
         {
-            var loadController = new ProfileFinderLoadController();
+            var loadController = new ProfileFinderLoadController(30);
             TestLoadController(new WebServerSimulator(50, 60), loadController, 10, 1, true);
             var result = loadController.Result;
         }
@@ -128,7 +128,7 @@ namespace SnBenchmarkTest.LoadControlTests
             var result = new List<PerformanceRecord>();
             for (int i = 0; i < 1000; i++)
             {
-                var loadController = new ProfileFinderLoadController2();
+                var loadController = new ProfileFinderLoadController2(30);
                 TestLoadController(new WebServerSimulator(50, 60), loadController, 10, 1, false);
                 result.Add(loadController.Result);
             }
@@ -141,7 +141,7 @@ namespace SnBenchmarkTest.LoadControlTests
         [TestMethod]
         public void WebServerSimulator_ProfileFinderLoadController2_Trace()
         {
-            var loadController = new ProfileFinderLoadController2();
+            var loadController = new ProfileFinderLoadController2(30);
             TestLoadController(new WebServerSimulator(50, 60), loadController, 10, 1, true);
             var result = loadController.Result;
         }

@@ -100,7 +100,7 @@ namespace SnBenchmark
         public string Password { get; set; }
 
         private string _warmupTimeArg;
-        [CommandLineArgument(name: "WarmupTime", required: false, aliases: "W,WARMUP", helpText: "Warmup time in seconds. Default: 60")]
+        [CommandLineArgument(name: "WarmupTime", required: false, aliases: "W,WARMUP", helpText: "Warmup time in seconds. Default: 30")]
         private string WarmupTimeArg
         {
             get { return _warmupTimeArg; }
@@ -112,9 +112,9 @@ namespace SnBenchmark
         }
 
         /// <summary>
-        /// Warmup time in seconds, while measuring is skipped.
+        /// Warmup time in seconds, while measuring is skipped. Default: 30
         /// </summary>
-        public int WarmupTime { get; private set; } = 60;
+        public int WarmupTime { get; private set; } = 30;
 
         private string _growingTimeArg;
         [CommandLineArgument(name: "GrowingTime", required: false, aliases: "G,GROW,GROWING", helpText: "Growing time in seconds. Default: 30")]
@@ -129,7 +129,7 @@ namespace SnBenchmark
         }
 
         /// <summary>
-        /// Length of a single period in seconds.
+        /// Length of a single growing period in seconds. Default: 30
         /// </summary>
         public int GrowingTime { get; private set; } = 30;
 
@@ -149,10 +149,6 @@ namespace SnBenchmark
         /// Maximum number of errors that can occur without stopping the benchmark.
         /// </summary>
         public int MaxErrors { get; private set; } = 10;
-
-        //UNDONE: Remove Pausing feature from documentation
-        //UNDONE: Remove Verbose argument from documentation
-        //UNDONE: Remove Limits argument from documentation
 
         private string _outputFileArg;
         [CommandLineArgument(name: "Output", required: false, aliases: "O,Out", helpText: "Output file for further analysis.")]

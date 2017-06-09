@@ -21,7 +21,7 @@ namespace SnBenchmark
         protected State ControllerState = State.Initial;
 
         public int Counter { get; protected set; }
-        protected readonly int GrowingCounterMax = 30;
+        protected readonly int GrowingCounterMax;
         protected int CountOfRunningProfiles;
         protected string RunningProfileComposition;
         protected string AverageResponseTime;
@@ -29,6 +29,11 @@ namespace SnBenchmark
         protected readonly MaxPerformanceDetector MaxPerformanceDetector= new MaxPerformanceDetector();
         protected List<PerformanceRecord> PerformanceTopValues = new List<PerformanceRecord>();
         public bool TopValueDetected { get; private set; }
+
+        protected LoadController(int growingTime)
+        {
+            GrowingCounterMax = growingTime;
+        }
 
         public double FilteredRequestsPerSec => MaxPerformanceDetector.FilteredRequestsPerSec;
         public double DiffValue => MaxPerformanceDetector.CurrentValue;
@@ -59,7 +64,7 @@ namespace SnBenchmark
     {
         private readonly int _sustainCounterMax;
 
-        public SustainPerformanceLoadController(int sustainInSec)
+        public SustainPerformanceLoadController(int growingTime, int sustainInSec) : base(growingTime)
         {
             _sustainCounterMax = sustainInSec;
         }
@@ -100,7 +105,7 @@ namespace SnBenchmark
         private int _sawToothCount;
         private int _sawToothMax = 3;
 
-        public SawToothLoadController(bool sawToothStartsWithDecrement)
+        public SawToothLoadController(int growingTime, bool sawToothStartsWithDecrement) : base(growingTime)
         {
             _sawToothStartsWithDecrement = sawToothStartsWithDecrement;
         }
@@ -177,6 +182,8 @@ namespace SnBenchmark
 
         public PerformanceRecord Result { get; private set; }
         public double Trace =>  _rpsFilter.FilteredValue;
+
+        public ProfileFinderLoadController(int growingTime) : base(growingTime) { }
 
         public override void Progress(int requestsPerSec, int countOfRunningProfiles, string runningProfileComposition, string averageResponseTime)
         {
@@ -278,6 +285,8 @@ namespace SnBenchmark
 
         public PerformanceRecord Result { get; private set; }
         public double Trace => _rpsFilter.FilteredValue;
+
+        public ProfileFinderLoadController2(int growingTime) : base(growingTime) { }
 
         public override void Progress(int requestsPerSec, int countOfRunningProfiles, string runningProfileComposition, string averageResponseTime)
         {
