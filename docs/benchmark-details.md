@@ -148,7 +148,7 @@ The first few lines of the file contain the execution values (e.g. start time) f
 
 Below that there is a running log table that can be visualized as a graph. 
 
-Follow these steps to make a graph out of benchmark result data:
+Follow these steps to make a graph out of benchmark result data in MS Excel:
 
 1. Delete the benchmark info at the top, so that the table header becomes the first row.
 2. Select all relevant columns: click the "D" column header and drag right to the last column (the first 3 columns are not needed for the chart).

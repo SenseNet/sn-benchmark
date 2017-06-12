@@ -32,14 +32,14 @@ Check DB existence:
     local     0.000GB
 ```
 ### Creating the first website
- - Create a folder for the website (from now on it is \<site folder 1\>)
-and copy your site file structure into the newly made \<site folder 1\>:  
+ - Create a folder for the website (from now on it is \[site folder 1\])
+and copy your site file structure into the newly made \[site folder 1\]:  
  - Edit config files:  
 	insert the following into web.config:  
 ```xml
 	<connectionStrings>
-		<add name="SnCrMsSql" connectionString="Data Source=<web server 1>;Initial Catalog=<sql db name>;Integrated Security=True" providerName="System.Data.SqlClient" />
-		<add name="SenseNet.MongoDbBlobDatabase" connectionString="mongodb://<mongo server name>/<mongo db name>" />
+		<add name="SnCrMsSql" connectionString="Data Source=[sql server 1];Initial Catalog=[sql db name];Integrated Security=True" providerName="System.Data.SqlClient" />
+		<add name="SenseNet.MongoDbBlobDatabase" connectionString="mongodb://[mongo server name]/[mongo db name]" />
 		   ...
 	</connectionStrings>
 	...
@@ -52,18 +52,18 @@ and copy your site file structure into the newly made \<site folder 1\>:
 	</appSettings>
 	<sensenet>
 		<packaging>
-			<add key="NetworkTargets" value="\\<web server 2>\Web\<site 2 name>;...;\\<web server N>\Web\<site N name>" />
+			<add key="NetworkTargets" value="\\[web server 2]\Web\[site 2 name];...;\\[web server N]\Web\[site N name]" />
 			...
 		</packaging>
 		<messaging>
-			<add key="MsmqChannelQueueName" value=".\private$\web;FormatName:DIRECT=TCP:<web server 1 ip>\private$\web" />
+			<add key="MsmqChannelQueueName" value=".\private$\web;FormatName:DIRECT=TCP:[web server 1 ip]\private$\web" />
 		</messaging>
 ```  
 	insert the following into SnAdminRuntime.exe.config:
 ```xml
 	<connectionStrings>
-		<add name="SnCrMsSql" connectionString="Data Source=<server name>;Initial Catalog=<sql db name>;Integrated Security=True" providerName="System.Data.SqlClient" />
-		<add name="SenseNet.MongoDbBlobDatabase" connectionString="mongodb://<mongo server name>/<mongo db name>" />
+		<add name="SnCrMsSql" connectionString="Data Source=[sql server name];Initial Catalog=[sql db name];Integrated Security=True" providerName="System.Data.SqlClient" />
+		<add name="SenseNet.MongoDbBlobDatabase" connectionString="mongodb://[mongo server name]/[mongo db name]" />
 		   ...
 	</connectionStrings>
 	...
@@ -76,20 +76,20 @@ and copy your site file structure into the newly made \<site folder 1\>:
 	...
 	<sensenet>
 		<packaging>
-			<add key="NetworkTargets" value="\\<web server 2>\Web\<site 2 name>;...;\\<web server N>\Web\<site N name>" />
+			<add key="NetworkTargets" value="\\[web server 2]\Web\[site 2 name];...;\\[web server N]\Web\[site N name]" />
 			...
 		</packaging>
 ```
 - Install your custom contents you want to use in benchmark read operations:  
 	Start Powershell, and execute the following commands:  
 	```text
-	cd C:\...\<site folder 1>\Admin\bin
-	.\SnAdmin.exe <custom package> initialCatalog:<sql db name> dataSource:<sql server name>
+	cd C:\...\[site folder 1]\Admin\bin
+	.\SnAdmin.exe [custom package] initialCatalog:[sql db name] dataSource:[sql server name]
 	```
   - Check the database:  
-	In Management Studio connect to the \<sql db name\> database and execute the following SQL command:
+	In Management Studio connect to the \[sql db name\] database and execute the following SQL command:
 	```SQL
-	SELECT COUNT(1) FROM [<sql db name>].[dbo].[Nodes]
+	SELECT COUNT(1) FROM [sql db name].[dbo].[Nodes]
 	```
     The resulting number helps assuring, you have all you need in its place.
 
@@ -103,19 +103,19 @@ and copy your site file structure into the newly made \<site folder 1\>:
 After having installed the above packages, your sensenet ECM is able to use Azure to store BLOBs.
 
 ### Creating the first website
- - Create a folder for the website (from now on it is \<site folder 1\>)
-and copy your site file structure into the newly made \<site folder 1\>:  
+ - Create a folder for the website (from now on it is \[site folder 1\])
+and copy your site file structure into the newly made \[site folder 1\]:  
  - Edit config files:  
 	insert the following into web.config:  
 ```xml
 	<connectionStrings>
-		<add name="SnCrMsSql" connectionString="Data Source=<web server 1>;Initial Catalog=<sql db name>;Integrated Security=True" providerName="System.Data.SqlClient" />
+		<add name="SnCrMsSql" connectionString="Data Source=[sql server];Initial Catalog=[sql db name];Integrated Security=True" providerName="System.Data.SqlClient" />
        <add name="SenseNet.AzureBlobStorage" connectionString="DefaultEndpointsProtocol=https;AccountName=[azure account name];AccountKey=[azure account key];EndpointSuffix=core.windows.net" />
 		   ...
 	</connectionStrings>
 	...
 	<appSettings>
-		<add key="SecurityMsmqChannelQueueName" value=".\private$\security;FormatName:DIRECT=TCP:<web server 1 ip>\private$\security" />
+		<add key="SecurityMsmqChannelQueueName" value=".\private$\security;FormatName:DIRECT=TCP:[web server 1 ip]\private$\security" />
 		...
 	</appSettings>
     <sensenet>
@@ -126,17 +126,17 @@ and copy your site file structure into the newly made \<site folder 1\>:
       ...
     <sensenet>
 	<packaging>
-		<add key="NetworkTargets" value="\\<web server 2>\Web\<site 2 name>;...;\\<web server N>\Web\<site N name>" />
+		<add key="NetworkTargets" value="\\[web server 2]\Web\[site 2 name];...;\\[web server N]\Web\[site N name]" />
 	    ...
 	</packaging>
 		<messaging>
-			<add key="MsmqChannelQueueName" value=".\private$\web;FormatName:DIRECT=TCP:<web server 1 ip>\private$\web" />
+			<add key="MsmqChannelQueueName" value=".\private$\web;FormatName:DIRECT=TCP:[web server 1 ip]\private$\web" />
 		</messaging>
 ```  
 	insert the following into SnAdminRuntime.exe.config:
 ```xml
 	<connectionStrings>
-		<add name="SnCrMsSql" connectionString="Data Source=<server name>;Initial Catalog=<sql db name>;Integrated Security=True" providerName="System.Data.SqlClient" />
+		<add name="SnCrMsSql" connectionString="Data Source=[sql server name];Initial Catalog=[sql db name]>;Integrated Security=True" providerName="System.Data.SqlClient" />
        <add name="SenseNet.AzureBlobStorage" connectionString="DefaultEndpointsProtocol=https;AccountName=[azure account name];AccountKey=[azure account key];EndpointSuffix=core.windows.net" />
 		   ...
 	</connectionStrings>
@@ -148,32 +148,32 @@ and copy your site file structure into the newly made \<site folder 1\>:
         </blobStorage>
           ...
         <packaging>
-            <add key="NetworkTargets" value="\\<web server 2>\Web\<site 2 name>;...;\\<web server N>\Web\<site N name>" />
+            <add key="NetworkTargets" value="\\[web server 2]\Web\[site 2 name];...;\\[web server N]\Web\[site N name]" />
 			...
         </packaging>
 ```
 - Install your custom contents you want to use in benchmark read operations:  
 	Start Powershell, and execute the following commands:  
 	```text
-	cd C:\...\<site folder 1>\Admin\bin
-	.\SnAdmin.exe <custom package> initialCatalog:<sql db name> dataSource:<sql server name>
+	cd C:\...\[site folder 1]\Admin\bin
+	.\SnAdmin.exe [custom package] initialCatalog:[sql db name] dataSource:[sql server name]
 	```
   - Check the database:  
-	In Management Studio connect to the \<sql db name\> database and execute the following SQL command:
+	In Management Studio connect to the \[sql db name\] database and execute the following SQL command:
 	```SQL
 	SELECT COUNT(1) FROM [<sql db name>].[dbo].[Nodes]
 	```
     The resulting number helps assuring, you have all you need in its place.
 ## Creating further websites
 As you want to create more than one website to work together in NLB, you need to set up the others as well. In the following steps the current server related values were labeled with an N to tell from the first one:
- - Create a folder for the website (from now on it is \<site folder N\>)
- - Copy the site file structure from the first site's folder into the newly made \<site folder N\>  
+ - Create a folder for the website (from now on it is \[site folder N\])
+ - Copy the site file structure from the first site's folder into the newly made \[site folder N\]  
  - Editing config files:  
 Editing web.config:  
 Change the following values:  
-	- from \<web server 1\> to \<web server N\>
-	- from \<web server 1 ip\> to \<web server N ip\>  
-	- from \<site 1 name\> to \<site N name\>  
-  In sensenet\packaging you should make sure that every other than the current website exists in NetworkTargets.
+	- from \[web server 1\] to \[web server N\]
+	- from \[web server 1 ip\] to \[web server N ip\]  
+	- from \[site 1 name\] to \[site N name\]  
+  In the sensenet\packaging section you should make sure that every other than the current website exists in NetworkTargets.
 
 

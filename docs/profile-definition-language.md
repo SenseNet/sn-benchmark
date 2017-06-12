@@ -1,6 +1,10 @@
 # Benchmark Profile Definition Language
 <a name="BenchmarkProfileDefinitionLanguage"></a>
-The Profile Definition is a text file that describes an action sequence. Possible actions: sending a web request, memorizing data from the response as a variable, waiting for a couple of seconds.
+The Profile Definition is a text file that describes an action sequence. 
+Possible actions: 
+ - sending a web request, 
+ - memorizing data from the response as a variable, 
+ - waiting for a couple of seconds
  
 At the beginnig of the line there is a *control character or word* that defines the purpose of that line. Empty lines and lines starting with an unrecognized control word will be skipped.
 
@@ -17,7 +21,8 @@ Path set is a technique that helps to use variable contents in the profiles. The
 
 #### Declaration
 
-The best place of the path set declarations is at the top of the profile file but this is not mandatory. The declaration has three parts:
+The best place of the path set declarations is 
+at the top of the profile file but this is not mandatory. The declaration has three parts:
 1. **Keyword**: this is the '*PATHSET:*'.
 2. **Name**: One word after the keyword separated by a space.
 3. **Definition**: this is a valid content query (in CQL).
@@ -31,7 +36,7 @@ A PATHSET reference have more parts. See the syntax:
 ##Name.Addressing[.Transformation]##
 ```
 
-1. **Start**: Two hashmark ('##').
+1. **Start**: Two hashmarks ('##').
 2. **Name**: Reference name of the path set.
 3. **Addressing**: Number or keyword that defines the profile's index and returns with the item that placed on the indexed position of the referenced set. The valid values:
     - **'First'**: Sets the profile's index to the original value.
@@ -41,7 +46,7 @@ A PATHSET reference have more parts. See the syntax:
 4.  **Transformation**: Transforms the actual path of the path set
     - **Parent**: Leaves the last segment of the path. This transformation can be used in chain but should be used with caution because there is no any validation.
     - **ODataEntity**: Changes the last segment of the path to indexer. For example "/Root/Segment1/Segment2" will be transformed to "/Root/Segment1('Segment2')"
-5. **Finish**:  Two hashmark ('##').
+5. **Finish**:  Two hashmarks ('##').
 
 ***Note**: the profile's index cannot exceed the path set size because every index operation is followed by a normalization (index modulo path set count).*
 
