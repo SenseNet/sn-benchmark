@@ -1,3 +1,11 @@
+---
+title: "Preparation of benchmark environment"
+source_url: 'https://github.com/SenseNet/sensenet/docs/sn-benchmark'
+category: Benchmark
+version: v7.0.0
+tags: [benchmark, preparation, environment, sn7, mongo, azure]
+---
+
 # Preparation of sensenet ECM benchmark environment
 
 This paper describes how to prepare an environment for the sensenet ECM Benchmark Tool with alternative BLOB storages in an NLB environment.
