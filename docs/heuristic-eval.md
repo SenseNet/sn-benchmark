@@ -1,3 +1,10 @@
+---
+title: "Benchmark behind the scenes"
+source_url: 'https://github.com/SenseNet/sensenet/docs/sn-benchmark'
+category: Benchmark
+version: v7.0.0
+tags: [benchmark, theory, sn7]
+---
 # sensenet ECM benchmark behind the scenes
 
 ## Maximum performance detection analysis with a heuristic algorithm
