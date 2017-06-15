@@ -1,3 +1,10 @@
+---
+title: "Benchmark Profile Definition Language"
+source_url: 'https://github.com/SenseNet/sensenet/docs/sn-benchmark'
+category: Benchmark
+version: v7.0.0
+tags: [benchmark, profile, language, sn7]
+---
 # Benchmark Profile Definition Language
 <a name="BenchmarkProfileDefinitionLanguage"></a>
 The Profile Definition is a text file that describes an action sequence. 
