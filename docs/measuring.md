@@ -7,8 +7,8 @@ tags: [benchmark, measuring, workflow, sn7]
 ---
 # Benchmark measuring
 This page discusses the sensenet ECM Benchmark Tool measuring process. Further information about the needed environment or the measuring profiles are at the following pages:
- - [Environment preparation](environment.md)
- - [Profiles](profile-definition-language.md)
+ - [Environment preparation](/docs/environment.md)
+ - [Profiles](/docs/profile-definition-language.md)
 ## Steps before measuring
   - Make sure you have a clean database and prepared for measuring
   - Check that LuceneIndex is in sync on all sites
