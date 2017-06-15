@@ -20,7 +20,7 @@ This page discusses the sensenet ECM Benchmark Tool measuring process. Further i
 	```
 	..BenchmarkTool\bin\SnBenchmark.exe -GROW:30 -ERRORS:10 -WARMUP:30 -SITE:"http://somehost.com,http://site01.com" -USR:admin -PWD:admin
 	```  
-Further explanation on parameters is in the [benchmark details documentation](benchmark-details.md).
+Further explanation on parameters is in the [benchmark details documentation](/docs/benchmark-details.md).
 If you would like reliable results, you should repeat it some 2-5 times. Between the iterations it is recommended to wait for your webservers to free the allocated resources.
 ## Steps after measuring
 The measuring makes .csv files from the measured data, but if there were errors .error files are also generated.
