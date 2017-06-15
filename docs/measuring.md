@@ -1,3 +1,10 @@
+---
+title: "Benchmark measuring"
+source_url: 'https://github.com/SenseNet/sensenet/docs/sn-benchmark'
+category: Benchmark
+version: v7.0.0
+tags: [benchmark, measuring, workflow, sn7]
+---
 # Benchmark measuring
 This page discusses the sensenet ECM Benchmark Tool measuring process. Further information about the needed environment or the measuring profiles are at the following pages:
  - [Environment preparation](environment.md)
