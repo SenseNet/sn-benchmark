@@ -6,7 +6,7 @@ The sensenet ECM server environment reaches its maximum performance (for whateve
 This expectation outlines a prerequisite to the algorithm to work: after having reached the maximum performance, during an increasing load we must see a constant served request per second plateau that follows the increasing phase.
 
 
-![alt text](images\1-evaluation.png "performance ladder")
+![alt text](images/1-evaluation.png "performance ladder")
 
 The benchmark tool records every second the 
   - active profile count (green)
@@ -22,19 +22,19 @@ Two complement behaviours appear on the graph.
 
 The most relevant parameter is the served requests. It is a very noisy graph but easy to recognise the growing and constant phases.
 
-![alt text](images\2-req-sec.png "served requests closeup")
+![alt text](images/2-req-sec.png "served requests closeup")
 
 End point detection with rulers: draw a line over the estimated average of the growing phase, and another one over the constant phase. The intersection of the two line is the measuring endpoint. This point signs the limit of the tested system. After this point the benchmark sofware can increase the load only in vain.
 
-![alt text](images\3-req-sec-lines.png "endpoint recognition")
+![alt text](images/3-req-sec-lines.png "endpoint recognition")
 
 In the algorithmic version the benchmark tool uses a noise filter on the req/sec (blue line), and makes the (also noise filtered) differential function (red). 
 
-![alt text](images\4-avg-diff.png "noise filtering and differential function")
+![alt text](images/4-avg-diff.png "noise filtering and differential function")
 
 The graph of the differential function indicates the direction of the main function changes in every point. When the growing stops, the differential function goes through zero from the positive values. At this point the benchmark measuring result is the value of the active profile count (190 in this case).
 
-![alt text](images\5-avg-diff-trigger.png "all of them put together")
+![alt text](images/5-avg-diff-trigger.png "all of them put together")
 
 Color codes on all graphs:
   - green: number of parallel profiles.
