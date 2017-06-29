@@ -1,7 +1,7 @@
-# Sense/Net Benchmark
+# sensenet ECM Benchmark
 [![Join the chat at https://gitter.im/SenseNet/sn-benchmark](https://badges.gitter.im/SenseNet/sn-benchmark.svg)](https://gitter.im/SenseNet/sn-benchmark?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[Sense/Net ECM](http://sensenet.com), an enterprise content management platform that is capable of handling many users and a huge number of content in a single Content Repository, constantly evolves. This requires a stable **benchmarking method** that lets us measure the impact of our decisions along the way. It may also help measuring performance on specific implementations, not just the core platform.
+[sensenet ECM](http://sensenet.com), an enterprise content management platform that is capable of handling many users and a huge number of content in a single Content Repository, constantly evolves. This requires a stable **benchmarking method** that lets us measure the impact of our decisions along the way. It may also help measuring performance on specific implementations, not just the core platform.
 
 ![Benchmark diagram 1](http://wiki.sensenet.com/images/6/66/Becnhmark-01.png "Benchmark diagram 1")
 
@@ -19,13 +19,13 @@
 
 ## How it works
 <a name="HowItWorks"></a>
-Sense/Net ECM benchmarking is built around **Profiles**. A profile represents a typical user (e.g. Visitor, Editor) that can be described by a **set of simple actions**. The benchmark tool will start to "attack" the site with a configured number of profiles (e.g. 20 Visitors) then it adds more and more visitors gradually. The tool stops when the portal starts responding slower than a predefined treshold.
+sensenet ECM benchmarking is built around **Profiles**. A profile represents a typical user (e.g. Visitor, Editor) that can be described by a **set of simple actions**. The benchmark tool will start to "attack" the site with a configured number of profiles (e.g. 20 Visitors) then it adds more and more visitors gradually. The tool stops when the portal starts responding slower than a predefined treshold.
 
 The idea is that after a few iterations you will be able to determine the **optimal set of profiles** (e.g. 40 Visitors, 5 Editors and 2 Administrators) that may use the portal concurrently without significant performance degradation.
 
 ## The tool
 <a name="TheTool"></a>
-**SnBenchmark** is a *command line tool* that measures the performance of a Sense/Net ECM instance and helps you determine real-life capabilities of your site. It requires a running portal, but no modifications are required on the portal side. The tool accesses the site through its *REST API* (or to be precise the [Sense/Net Client library](http://wiki.sensenet.com/Client_library) built on top of it). As it is written using an *asynchronous* architecture, it does not consume too much resources on the client you are executing it on.
+**SnBenchmark** is a *command line tool* that measures the performance of a sensenet ECM instance and helps you determine real-life capabilities of your site. It requires a running portal, but no modifications are required on the portal side. The tool accesses the site through its *REST API* (or to be precise the [sensenet ECM Client library](http://wiki.sensenet.com/Client_library) built on top of it). As it is written using an *asynchronous* architecture, it does not consume too much resources on the client you are executing it on.
 
 The result of a benchmark execution will be a *csv file* containing request/response times and other collected data that you can use to visualize the behavior of your site under different load. See an example later in this document.
 
