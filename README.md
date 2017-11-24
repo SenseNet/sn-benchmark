@@ -64,7 +64,7 @@ For a more complex example please check the Editor profile provided by us in the
 <a name="Resources"></a>
 The SnBenchmark tool itself does not consume too much resources. It is written as a completely asynchron tool, so you can start it on an average machine.
 
-You should pay attention to the generated log files though: after a few iterations the csv or error files but especially request logs and test directories may consume a significant amount of disk space.
+You should pay attention to the generated log files though: after a few iterations the csv or error files and especially request logs and test directories may consume a significant amount of disk space.
 
 ## Hardware
 <a name="Hardware"></a>
