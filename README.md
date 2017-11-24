@@ -19,7 +19,6 @@ sensenet ECM benchmarking is built around **Profiles**. A profile represents a t
 The idea is that after a few iterations you will be able to determine the **optimal set of profiles** (e.g. 40 Visitors, 5 Editors and 2 Administrators) that may use the portal concurrently without significant performance degradation.
 
 ### Profile example: Visitor
-=======
 
 <a name="ProfileExampleTheVisitor"></a>
 A Visitor usually performs actions similar to these:
