@@ -100,7 +100,7 @@ namespace SnBenchmark
         public string Password { get; set; }
 
         private string _warmupTimeArg;
-        [CommandLineArgument(name: "WarmupTime", required: false, aliases: "W,WARMUP", helpText: "Warmup time in seconds. Default: 60")]
+        [CommandLineArgument(name: "WarmupTime", required: false, aliases: "W,WARMUP", helpText: "Warmup time in seconds. Default: 30")]
         private string WarmupTimeArg
         {
             get { return _warmupTimeArg; }
@@ -112,9 +112,9 @@ namespace SnBenchmark
         }
 
         /// <summary>
-        /// Warmup time in seconds, while measuring is skipped.
+        /// Warmup time in seconds, while measuring is skipped. Default: 30
         /// </summary>
-        public int WarmupTime { get; private set; } = 60;
+        public int WarmupTime { get; private set; } = 30;
 
         private string _growingTimeArg;
         [CommandLineArgument(name: "GrowingTime", required: false, aliases: "G,GROW,GROWING", helpText: "Growing time in seconds. Default: 30")]
@@ -129,40 +129,9 @@ namespace SnBenchmark
         }
 
         /// <summary>
-        /// Length of a single period in seconds.
+        /// Length of a single growing period in seconds. Default: 30
         /// </summary>
         public int GrowingTime { get; private set; } = 30;
-
-        public const double DefaultLimitValue = 10.0;
-        private string _limitArg;
-        [CommandLineArgument(name: "Limit", required: false, aliases: "L", helpText: "Average response time limits per speed (e.g.: NORMAL:4;FAST:2;slow:6.3). Every speed default is 10.0.")]
-        private string LimitArg
-        {
-            get { return _limitArg; }
-            set
-            {
-                _limitArg = value;
-                Limits = ParseLimits(value);
-            }
-        }
-
-        /// <summary>
-        /// Average response time limits (name/value pairs, e.g. normal/4, slow/10).
-        /// </summary>
-        public Dictionary<string, double> Limits { get; private set; } = new Dictionary<string, double> { { Expression.RequestExpression.NormalSpeed, 10.0 } };
-
-        private static Dictionary<string, double> ParseLimits(string src)
-        {
-            var result = new Dictionary<string, double>();
-            foreach (var item in src.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
-            {
-                var x = item.Split(':');
-                var name = x[0].ToUpper();
-                var value = double.Parse(x[1].Replace(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator, "."), CultureInfo.InvariantCulture);
-                result.Add(name, value);
-            }
-            return result;
-        }
 
         private string _maxErrorsArg;
         [CommandLineArgument(name: "MaxErrors", required: false, aliases: "E,ERRORS", helpText: "Maximum allowed error count. Default: 10")]
@@ -180,12 +149,6 @@ namespace SnBenchmark
         /// Maximum number of errors that can occur without stopping the benchmark.
         /// </summary>
         public int MaxErrors { get; private set; } = 10;
-
-        /// <summary>
-        /// Indicates whether the tool should write detailed information to the console.
-        /// </summary>
-        [CommandLineArgument(name: "Verbose", required: false, aliases: "V", helpText: "Verbose console")]
-        public bool Verbose { get; set; }
 
         private string _outputFileArg;
         [CommandLineArgument(name: "Output", required: false, aliases: "O,Out", helpText: "Output file for further analysis.")]
@@ -235,7 +198,9 @@ namespace SnBenchmark
         }
         private static string GetResponsesDirectoryPath(string outputFile)
         {
-            return Path.Combine(Path.GetDirectoryName(outputFile), Path.GetFileNameWithoutExtension(outputFile));
+            if (outputFile == null)
+                throw new ArgumentNullException(nameof(outputFile));
+            return Path.Combine(Path.GetDirectoryName(outputFile) ?? "", Path.GetFileNameWithoutExtension(outputFile));
         }
     }
 }

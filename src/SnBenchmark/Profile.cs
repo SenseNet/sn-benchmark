@@ -68,6 +68,7 @@ namespace SnBenchmark
         /// </summary>
         /// <param name="name">Name of the profile.</param>
         /// <param name="src">Profile definition script.</param>
+        /// <param name="location">Path of the container filesystem directory.</param>
         /// <param name="speedItems">List of response limit names.</param>
         /// <returns>A fully initialized profile object.</returns>
         public static Profile Parse(string name, string src, string location, List<string> speedItems)
@@ -84,19 +85,17 @@ namespace SnBenchmark
             return new Profile(this.Name, this.Location, this.Actions.Select(action => action.Clone()).ToList());
         }
 
-        private bool _running;
+        public bool Running { get; private set; }
         internal async Task ExecuteAsync()
         {
-            _running = true;
+            Running = true;
 
             await Task.Delay(RNG.Get(0, 2000));
 
-            while (_running)
+            while (Running)
             {
                 for (var i = 0; i < this.Actions.Count; i++)
                 {
-                    if (!_running)
-                        break;
                     try
                     {
                         await this.Actions[i].ExecuteAsync(this, "P" + this.Id + "A" + i + "x");
@@ -106,8 +105,11 @@ namespace SnBenchmark
                         Program.AddError(e, this, i, this.Actions[i]);
                     }
                 }
+
+                if (!Running)
+                    break;
             }
-            Program.StoppedProfiles++;
+            Program.ProfileStopped(this);
         }
 
         internal void Test(string profileResponsesDirectory)
@@ -126,7 +128,7 @@ namespace SnBenchmark
         }
         internal void Stop()
         {
-            _running = false;
+            Running = false;
         }
 
 

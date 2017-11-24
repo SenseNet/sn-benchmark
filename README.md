@@ -13,11 +13,14 @@
 
 ## How it works
 <a name="HowItWorks"></a>
+
 sensenet ECM benchmarking is built around **Profiles**. A profile represents a typical user (e.g. Visitor, Editor) whose activity can be described by a **set of simple actions**. At the first phase the benchmark tool starts to put load on the site with a configured number of profiles, then it adds more and more gradually. The tool stops when the portal starts responding slower than a predefined treshold.
 
 The idea is that after a few iterations you will be able to determine the **optimal set of profiles** (e.g. 40 Visitors, 5 Editors and 2 Administrators) that may use the portal concurrently without significant performance degradation.
 
 ### Profile example: Visitor
+=======
+
 <a name="ProfileExampleTheVisitor"></a>
 A Visitor usually performs actions similar to these:
 1. visit the main page
