@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCompany("Sense/Net Inc.")]
 [assembly: AssemblyCopyright("Copyright © Sense/Net Inc. 2016")]
 [assembly: AssemblyTrademark("Sense/Net Inc.")]
-[assembly: AssemblyProduct("Sense/Net Benchmark")]
+[assembly: AssemblyProduct("senseset ECM Benchmark")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCulture("")]
 [assembly: AssemblyVersion("1.1.0.0")]
