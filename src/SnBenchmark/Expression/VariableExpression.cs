@@ -8,31 +8,38 @@ namespace SnBenchmark.Expression
     {
         internal const char VariableStart = '@';
 
-        private readonly string _name;
-        private readonly string _objectName;
-        private readonly string[] _propertyPath;
+        internal string Name { get; }
+        internal string ObjectName { get; }
+        internal string[] PropertyPath { get; }
 
         public VariableExpression(string name, string objectName, string[] propertyPath)
         {
-            this._name = name;
-            this._objectName = objectName;
-            this._propertyPath = propertyPath;
+            this.Name = name;
+            this.ObjectName = objectName;
+            this.PropertyPath = propertyPath;
         }
 
         internal override BenchmarkActionExpression Clone()
         {
-            return new VariableExpression(_name, _objectName, _propertyPath);
+            return new VariableExpression(Name, ObjectName, PropertyPath);
         }
 
         internal override Task ExecuteAsync(IExecutionContext context, string actionId)
         {
-            var @object = context.GetVariable(_objectName);
-            var value = ResolveProperty(@object as string, _propertyPath);
-            context.SetVariable(_name, value);
+            var @object = context.GetVariable(ObjectName);
+            var value = ResolveProperty(@object as string, PropertyPath);
+            context.SetVariable(Name, value);
 
             // Return an empty task as this particular method 
             // does not need to execute anything asynchronously.
             return Task.FromResult<object>(null);
+        }
+
+        internal override void Test(IExecutionContext context, string actionId, string profileResponsesDirectory)
+        {
+            var @object = context.GetVariable(ObjectName);
+            var value = ResolveProperty(@object as string, PropertyPath);
+            context.SetVariable(Name, value);
         }
 
         private static object ResolveProperty(string objectSrc, string[] propertyPath)
@@ -72,7 +79,7 @@ namespace SnBenchmark.Expression
 
         public override string ToString()
         {
-            return _name + " = " + _objectName + string.Join(".", _propertyPath);
+            return Name + " = " + ObjectName + string.Join(".", PropertyPath);
         }
     }
 }

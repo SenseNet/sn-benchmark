@@ -4,18 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{52E34237-7594-420F-801A-FDDC1A07EF43}</ProjectGuid>
+    <ProjectGuid>{99074483-89B9-4C07-B960-2833559C6E08}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SnBenchmark</RootNamespace>
-    <AssemblyName>SnBenchmark</AssemblyName>
+    <RootNamespace>SNBConfigChecker</RootNamespace>
+    <AssemblyName>SNBConfigChecker</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <SccProjectName>SAK</SccProjectName>
-    <SccLocalPath>SAK</SccLocalPath>
-    <SccAuxPath>SAK</SccAuxPath>
-    <SccProvider>SAK</SccProvider>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -37,22 +33,8 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.10.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="SenseNet.Client, Version=1.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SenseNet.Client.1.1.0.0\lib\net45\SenseNet.Client.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="SenseNet.Tools, Version=2.1.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SenseNet.Tools.2.1.1\lib\net451\SenseNet.Tools.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -63,42 +45,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BuiltInWebAccess.cs" />
-    <Compile Include="Expression\BenchmarkActionExpression.cs" />
-    <Compile Include="Expression\IExecutionContext.cs" />
-    <Compile Include="Expression\PathSetExpression.cs" />
-    <Compile Include="Expression\RequestExpression.cs" />
-    <Compile Include="Expression\UploadExpression.cs" />
-    <Compile Include="Expression\VariableExpression.cs" />
-    <Compile Include="Expression\WaitExpression.cs" />
-    <Compile Include="IWebAccess.cs" />
-    <Compile Include="LoadController.cs" />
-    <Compile Include="LoadControllerBase.cs" />
-    <Compile Include="MaxPerformanceDetector.cs" />
-    <Compile Include="NoiseFilter.cs" />
-    <Compile Include="Parser\Lexer.cs" />
-    <Compile Include="Parser\Token.cs" />
-    <Compile Include="PathSet.cs" />
-    <Compile Include="PathOperation.cs" />
-    <Compile Include="Web.cs" />
-    <Compile Include="Profile.cs" />
-    <Compile Include="Parser\ProfileParser.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Configuration.cs" />
-    <Compile Include="RNG.cs" />
+    <Compile Include="SnDatabase.cs" />
+    <Compile Include="SnWeb.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config">
-      <SubType>Designer</SubType>
-    </None>
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="Profiles\Editor.txt" />
-    <Content Include="Profiles\Visitor.txt" />
+    <None Include="App.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -10,17 +10,20 @@ namespace SnBenchmark.Parser
     {
         private readonly Lexer _lexer;
         private readonly List<BenchmarkActionExpression> _actions;
+        private readonly string _location;
         private readonly List<string> _speedItems;
 
         /// <summary>
         /// Initializes a new instance of the ProfileParser class.
         /// </summary>
         /// <param name="src">Profile script definition file contents.</param>
+        /// <param name="location">Path of the profile.</param>
         /// <param name="speedItems">Speed names used in the profile.</param>
-        public ProfileParser(string src, List<string> speedItems)
+        public ProfileParser(string src, string location, List<string> speedItems)
         {
             _lexer = new Lexer(src);
             _lexer.NextToken();
+            _location = location;
             _speedItems = speedItems;
             _actions = new List<BenchmarkActionExpression>();
         }
@@ -34,18 +37,20 @@ namespace SnBenchmark.Parser
             while (true)
             {
                 var token = _lexer.CurrentToken;
-                BenchmarkActionExpression parsedAction = null;
+                BenchmarkActionExpression parsedAction;
                 switch (token.Type)
                 {
                     case TokenType.Comment: parsedAction = ParseComment(token); break;
                     case TokenType.Request: parsedAction = ParseRequest(token); break;
                     case TokenType.Wait: parsedAction = ParseWait(token); break;
                     case TokenType.Variable: parsedAction = ParseVariable(token); break;
+                    case TokenType.PathSet: parsedAction = ParsePathSet(token); break;
+                    case TokenType.Upload: parsedAction = ParseUpload(token); break;
                     case TokenType.Unparsed: throw new ApplicationException("Unparsed line: " + token.Value);
                     case TokenType.Eof: return _actions;
                     case TokenType.Data:
                     case TokenType.Speed:
-                        break;
+                        throw new ApplicationException($"Unexpected token: {token.Type}: {token.Value}");
                     default:
                         throw new ArgumentOutOfRangeException();
                 }
@@ -97,6 +102,37 @@ namespace SnBenchmark.Parser
             _lexer.NextToken();
 
             return new VariableExpression(name, objectName, propertyPath);
+        }
+        private BenchmarkActionExpression ParsePathSet(Token token)
+        {
+            var src = token.Value;
+
+            var p = src.IndexOf(' ');
+            if (p < 0)
+                throw new ApplicationException("Syntax error: must starts with a name followed by a definition.");
+
+            var name = src.Substring(0, p);
+            var definition = src.Substring(p);
+
+            _lexer.NextToken();
+
+            return new PathSetExpression(name.Trim(), definition.Trim());
+        }
+        private BenchmarkActionExpression ParseUpload(Token token)
+        {
+            var src = token.Value;
+            var p = src.IndexOf(" /Root", StringComparison.OrdinalIgnoreCase);
+            if (p < 0)
+                throw new ApplicationException("Syntax error: must starts with a global or local filesystem path followed by a repository path.");
+
+            var source = src.Substring(0, p).Trim();
+            var target = src.Substring(p).Trim();
+
+            _lexer.NextToken();
+
+            var speed = ParseSpeed(_lexer.CurrentToken);
+
+            return new UploadExpression(source, target, _location, speed);
         }
 
         private BenchmarkActionExpression ParseRequest(Token token)

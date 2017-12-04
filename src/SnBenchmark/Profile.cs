@@ -3,6 +3,7 @@ using SnBenchmark.Parser;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -12,25 +13,52 @@ namespace SnBenchmark
     /// Represents a series of actions that a typical uses performs on a site. E.g. a Visitor profile
     /// may consist of a few browsing steps, a search request and visiting one of the results.
     /// </summary>
-    [DebuggerDisplay("{Id}:{Name}")]
+    [DebuggerDisplay("{Id}:{Name}[{InitialIndex}]")]
     internal class Profile : IExecutionContext
     {
+        private static volatile int _lastId;
+
+        private static object InitialIndexesLock = new object();
+        private static readonly Dictionary<string, int> InitialIndexes = new Dictionary<string, int>();
+
+        internal static int GetNextInitialIndexByProfileName(string name)
+        {
+            lock (InitialIndexesLock)
+            {
+                int value;
+                if (InitialIndexes.TryGetValue(name, out value))
+                    ++value;
+                InitialIndexes[name] = value;
+                return value;
+            }
+        }
+
+        internal static void ResetIdAndIndexes()
+        {
+            _lastId = 0;
+            lock (InitialIndexesLock)
+                InitialIndexes.Clear();
+        }
+
         //======================================================== Properties
 
-        private static volatile int _lastId;
         public int Id { get; }
 
         public string Name { get; }
+
+        public string Location { get; }
 
         public List<BenchmarkActionExpression> Actions { get; }
 
         //======================================================== Constructors
 
-        public Profile(string name, List<BenchmarkActionExpression> actions)
+        public Profile(string name, string location, List<BenchmarkActionExpression> actions)
         {
-            Id = ++_lastId;
             Name = name;
+            Location = location;
             Actions = actions;
+            Id = ++_lastId;
+            InitialIndex = GetNextInitialIndexByProfileName(name);
         }
 
         //======================================================== Static API
@@ -40,35 +68,34 @@ namespace SnBenchmark
         /// </summary>
         /// <param name="name">Name of the profile.</param>
         /// <param name="src">Profile definition script.</param>
+        /// <param name="location">Path of the container filesystem directory.</param>
         /// <param name="speedItems">List of response limit names.</param>
         /// <returns>A fully initialized profile object.</returns>
-        public static Profile Parse(string name, string src, List<string> speedItems)
+        public static Profile Parse(string name, string src, string location, List<string> speedItems)
         {
-            var parser = new ProfileParser(src, speedItems);
+            var parser = new ProfileParser(src, location, speedItems);
             var benchmarkActions = parser.Parse();
-            return new Profile(name, benchmarkActions);
+            return new Profile(name, location, benchmarkActions);
         }
 
         //======================================================== Instance API
 
         internal Profile Clone()
         {
-            return new Profile(this.Name, this.Actions.Select(action => action.Clone()).ToList());
+            return new Profile(this.Name, this.Location, this.Actions.Select(action => action.Clone()).ToList());
         }
 
-        private bool _running;
+        public bool Running { get; private set; }
         internal async Task ExecuteAsync()
         {
-            _running = true;
+            Running = true;
 
             await Task.Delay(RNG.Get(0, 2000));
 
-            while (_running)
+            while (Running)
             {
                 for (var i = 0; i < this.Actions.Count; i++)
                 {
-                    if (!_running)
-                        break;
                     try
                     {
                         await this.Actions[i].ExecuteAsync(this, "P" + this.Id + "A" + i + "x");
@@ -78,18 +105,57 @@ namespace SnBenchmark
                         Program.AddError(e, this, i, this.Actions[i]);
                     }
                 }
+
+                if (!Running)
+                    break;
             }
-            Program.StoppedProfiles++;
+            Program.ProfileStopped(this);
+        }
+
+        internal void Test(string profileResponsesDirectory)
+        {
+            for (var i = 0; i < this.Actions.Count; i++)
+            {
+                try
+                {
+                    this.Actions[i].Test(this, "P" + this.Id + "A" + i + "x", profileResponsesDirectory);
+                }
+                catch (Exception e)
+                {
+                    Program.AddError(e, this, i, this.Actions[i]);
+                }
+            }
         }
         internal void Stop()
         {
-            _running = false;
+            Running = false;
+        }
+
+
+        internal int InitialIndex { get; }
+        private readonly Dictionary<string, int> _indexes = new Dictionary<string, int>(); // PathSet.Name --> index
+        internal int GetIndex(string name)
+        {
+            int result;
+            if (!_indexes.TryGetValue(name, out result))
+            {
+                result = InitialIndex;
+                _indexes[name] = result;
+            }
+            return result;
+        }
+
+        internal void SetIndex(string name, int value)
+        {
+            _indexes[name] = value;
         }
 
         //======================================================== IExecutionContext members
 
         private static readonly Dictionary<string, object> GlobalScope = new Dictionary<string, object>();
         private readonly Dictionary<string, object> _localScope = new Dictionary<string, object>();
+
+        public Profile CurrentProfile => this;
 
         void IExecutionContext.SetVariable(string name, object value)
         {
@@ -128,9 +194,21 @@ namespace SnBenchmark
             return result;
         }
 
+        public string GetResponseFilePath(string profileResponsesDirectory, string actionId)
+        {
+            return Path.Combine(profileResponsesDirectory, $"Response_{actionId}.txt");
+        }
+
         private Dictionary<string, object> GetScope(string name)
         {
             return name[1] == VariableExpression.VariableStart ? GlobalScope : _localScope;
+        }
+
+        internal static void GetPathSets(Profile profile, out IEnumerable<PathSetExpression> pathSetExpressions)
+        {
+            pathSetExpressions = profile.Actions.Where(a => a is PathSetExpression).Cast<PathSetExpression>().ToArray();
+            foreach (var pathSetExpr in pathSetExpressions)
+                profile.Actions.Remove(pathSetExpr);
         }
     }
 }

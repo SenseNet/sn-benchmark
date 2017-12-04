@@ -2,23 +2,16 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: InternalsVisibleTo("SnBenchmarkTest")]
-
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-#if DEBUG
-[assembly: AssemblyTitle("SnBenchmark (Debug)")]
-#else
-[assembly: AssemblyTitle("SnBenchmark (Release)")]
-#endif
-
+[assembly: AssemblyTitle("SNBCalc")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Sense/Net Inc.")]
-[assembly: AssemblyCopyright("Copyright © Sense/Net Inc. 2016")]
-[assembly: AssemblyTrademark("Sense/Net Inc.")]
-[assembly: AssemblyProduct("Sense/Net Benchmark")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("SNBCalc")]
+[assembly: AssemblyCopyright("Copyright ©  2017")]
+[assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
@@ -27,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("52e34237-7594-420f-801a-fddc1a07ef43")]
+[assembly: Guid("81983a89-99f3-4d50-8776-0f72c414c56c")]
 
 // Version information for an assembly consists of the following four values:
 //
