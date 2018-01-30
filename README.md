@@ -16,10 +16,11 @@
 For the benchmark tool to work, first you will need some preparation on the [measuring environment](/docs/environment.md).
 sensenet ECM benchmarking is built around **Profiles**. A profile represents a typical user (e.g. Visitor, Editor) whose activity can be described by a **set of simple actions**. At the first phase the benchmark tool starts to put load on the site with a configured number of profiles, then it adds more and more gradually. The tool stops when the portal starts responding slower than a predefined treshold.
 
-The idea is that after a few iterations you will be able to determine the **optimal set of profiles** (e.g. 40 Visitors, 5 Editors and 2 Administrators) that may use the portal concurrently without significant performance degradation. More on the workflow and usage at [Benchmark Details](/docs/benchmark-details.md). More on the idea that was the base of the benchmarking at the [behind the scenes](/docs/heuristic-eval.md) page. Read more on [measuring and result evaluating](/docs/measuring.md).
+The idea is that after a few iterations you will be able to determine the **optimal set of profiles** (e.g. 40 Visitors, 5 Editors and 2 Administrators) that may use the portal concurrently without significant performance degradation. More on the workflow and usage at [Benchmark Details](/docs/benchmark-details.md). Read more on [measuring and result evaluating](/docs/measuring.md).
 
 
 ### Profile example: Visitor
+=======	   
 
 <a name="ProfileExampleTheVisitor"></a>
 A Visitor usually performs actions similar to these:
