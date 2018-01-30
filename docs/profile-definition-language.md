@@ -20,7 +20,7 @@ If the line starts with a semicolon character (;) the line will be skipped.
 ```text
 ; PROFILE DESCRIPTION: Small content editor task
 ```
-There is only whole line comment, it is not possible to write an inline comment.
+There is only line comment, it is not possible to write an inline comment.
 
 ### PATHSET
 
@@ -51,7 +51,7 @@ A PATHSET reference have more parts. See the syntax:
     - **'Next'**: Increment the position 
     - **Direct index**: A non-negative integer number that ignores the profile's index.
 4.  **Transformation**: Transforms the actual path of the path set
-    - **Parent**: Leaves the last segment of the path. This transformation can be used in chain but should be used with caution because there is not any validation.
+    - **Parent**: Leaves the last segment of the path. This transformation can be used in chain but should be used with caution because there is no any validation.
     - **ODataEntity**: Changes the last segment of the path to indexer. For example "/Root/Segment1/Segment2" will be transformed to "/Root/Segment1('Segment2')"
 5. **Finish**:  Two hashmarks ('##').
 
@@ -103,7 +103,7 @@ REQ: DELETE /odata.svc/content(1234)
 There are a couple of extensions to the request line above. They can be written as separate lines after a request line. The following keywords can be used: *DATA, SPEED, VAR*
 
 #### DATA
-There are many OData requests that require some data in the request stream. This is how you define post data.
+There are many OData requests that require some data in the request stream. This is how you define a post data.
 ```text
 ; Create a new memo
 REQ: POST /OData.svc/workspaces/Project/madridprojectworkspace/Memos
@@ -135,7 +135,7 @@ UPLOAD: <sourcefile> <targetfolder>
   - **targetfolder**: Target folder is an existing repository folder that allows File content type.
   - **SPEED**: Speed parameter also allowed (see above under the REQ command). This operation's speed category depends on the file size but SLOW is usually a good choice.
 
-In this version the uploaded file name equals to the source's name. Therefore it is strongly recommended in the benchmark scenario that let the target folder be created by the current profile and the new folder name unique. Uniqueness can be achieved with a folder content type that enables the incremental naming rule (link: ... ... ... ... ... ... ... ... ... ... ...).
+In this version the uploaded file name equals to the source's name. Therefore it is strongly recommended in the benchmark scenario that the target folder will be created by the current profile and the new folder name be unique. Uniqueness can be achieved with a folder content type that enables the incremental naming rule (link: ... ... ... ... ... ... ... ... ... ... ...).
 
 Example:
 ```text
