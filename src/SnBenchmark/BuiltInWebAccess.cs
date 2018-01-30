@@ -49,7 +49,7 @@ namespace SnBenchmark
         /// </summary>
         public async Task<string> RequestAsync(string actionId, ServerContext server, string speedItem, string httpMethod, string url, string requestBody)
         {
-            url += (url.Contains("?") ? "&" : "?") + "benchamrkId=" + actionId;
+            url += (url.Contains("?") ? "&" : "?") + "benchmarkId=" + actionId;
             var startTime = DateTime.UtcNow;
             Interlocked.Increment(ref _activeRequests);
             _allRequests++;
