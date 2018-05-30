@@ -136,7 +136,7 @@ FINISHED.
 BENCHMARK RESULT: Profiles: 115 (Downloader: 92, Uploader50K: 23); RPS: 35,5572; All requests: 26515; Errors: 0; Response times: NORMAL: 0,941; SLOW: 0,907
 Finished.
 ```
-The real result of the execution is the written profile count. This is 115 in the mentioned example:
+The real result of the execution is the written profile count. This is 115 in the example:
 ```
 BENCHMARK RESULT: Profiles: 115 (Downloader...
 ```
@@ -162,7 +162,7 @@ A sample request log (truncated):
 Valid benchmark results (\*.csv) can be visualized from the data in the output file.
 The output file is in .csv format that can be opened in a spreadsheet software like *Microsoft Excel*.
 
-A sample result file (truncasted):
+A sample result file (truncated):
 ```
 "sep=;"
 Benchmark start (UTC):;2017. 11. 13. 7:18:52
