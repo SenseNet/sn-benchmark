@@ -1,10 +1,11 @@
 ---
 title: "Benchmark Profile Definition Language"
-source_url: 'https://github.com/SenseNet/sensenet/docs/sn-benchmark'
+source_url: 'https://github.com/SenseNet/sn-benchmark/tree/master/docs/profile-definition-language.md'
 category: Benchmark
 version: v7.0.0
 tags: [benchmark, profile, language, sn7]
 ---
+
 # Benchmark Profile Definition Language
 <a name="BenchmarkProfileDefinitionLanguage"></a>
 The Profile Definition is a text file that describes an action sequence. 
@@ -13,24 +14,23 @@ Possible actions:
  - memorizing data from the response as a variable, 
  - waiting for a couple of seconds
  
-At the beginnig of the line there is a *control character or word* that defines the purpose of that line. Empty lines and lines starting with an unrecognized control word will be skipped.
+At the beginning of the line there is a *control character or word* that defines the purpose of that line. Empty lines and lines starting with an unrecognized control word will be skipped.
 
 ### Comment
 If the line starts with a semicolon character (;) the line will be skipped.
 ```text
 ; PROFILE DESCRIPTION: Small content editor task
 ```
-There is only line comment, it is not possible to write an inline comment.
+There is only full line comment, it is not possible to write an inline comment.
 
 ### PATHSET
 
-Path set is a technique that helps to use variable contents in the profiles. The set is defined by a ContentQuery and referenced in the webrequests indirectly. Every use case gets a path from the set. The actual path instance depends on the profileid and kind of reference (see below under the USAGE).
+Path set is a technique that lets us to use variable contents in profiles. The set is defined by a ContentQuery and referenced in web requests indirectly. Every use case gets a path from the set. The actual path instance depends on the profileid and the kind of the reference (see below under the USAGE).
 
 #### Declaration
 
-The best place of the path set declarations is 
-at the top of the profile file but this is not mandatory. The declaration has three parts:
-1. **Keyword**: this is the '*PATHSET:*'.
+The best place of path set declarations is at the top of the profile file but this is not mandatory. The declaration has three parts:
+1. **Keyword**: this is the word '*PATHSET:*'.
 2. **Name**: One word after the keyword separated by a space.
 3. **Definition**: this is a valid content query (in CQL).
 
@@ -38,20 +38,20 @@ It is strongly recommended to use AND / OR logical operators in the content quer
 
 #### Usage
 
-A PATHSET reference have more parts. See the syntax:
+A PATHSET reference have multiple parts. See the syntax:
 ```text
 ##Name.Addressing[.Transformation]##
 ```
 
 1. **Start**: Two hashmarks ('##').
 2. **Name**: Reference name of the path set.
-3. **Addressing**: Number or keyword that defines the profile's index and returns with the item that placed on the indexed position of the referenced set. The valid values:
+3. **Addressing**: Number or keyword that defines the profile's index and returns with the item found on the indexed position of the referenced set. Valid values are:
     - **'First'**: Sets the profile's index to the original value.
     - **'Current'**: Stays on the current position.
     - **'Next'**: Increment the position 
     - **Direct index**: A non-negative integer number that ignores the profile's index.
 4.  **Transformation**: Transforms the actual path of the path set
-    - **Parent**: Leaves the last segment of the path. This transformation can be used in chain but should be used with caution because there is no any validation.
+    - **Parent**: Truncates the last segment of the path. This transformation can be used in chain but should be used with caution because there is no validation.
     - **ODataEntity**: Changes the last segment of the path to indexer. For example "/Root/Segment1/Segment2" will be transformed to "/Root/Segment1('Segment2')"
 5. **Finish**:  Two hashmarks ('##').
 
@@ -135,7 +135,7 @@ UPLOAD: <sourcefile> <targetfolder>
   - **targetfolder**: Target folder is an existing repository folder that allows File content type.
   - **SPEED**: Speed parameter also allowed (see above under the REQ command). This operation's speed category depends on the file size but SLOW is usually a good choice.
 
-In this version the uploaded file name equals to the source's name. Therefore it is strongly recommended in the benchmark scenario that the target folder will be created by the current profile and the new folder name be unique. Uniqueness can be achieved with a folder content type that enables the incremental naming rule (link: ... ... ... ... ... ... ... ... ... ... ...).
+In this version the uploaded file name equals to the source's name. Therefore it is strongly recommended in a benchmark scenario that the current profile should generate the target (parent) folder and the new folder name should be unique. Uniqueness can be achieved by making the server generate the name for the folder (the folder content type must enable incremental naming).
 
 Example:
 ```text
