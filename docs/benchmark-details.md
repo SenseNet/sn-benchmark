@@ -18,14 +18,23 @@ For debugging purposes a request log will be written after the execution. This f
 
 ## Execution workflow
 <a name="ExecutionWorkflow"></a>
-This is what the tool does, when you execute it:
-1. loads the provided profiles from text files and the given command prompt parameters
-2. starts measurement with a short warmup period
-3. adds more profiles periodically
-4. collects average response times during a period
-5. stops adding more profiles when a *predefined response limit* is reached
-6. waits while all the remaining requests finish
-7. writes the last requests to a log file
+The tool can detect the webserver's maximum safe performance automatically. The maximum safe performance is a little bit smaller than the theoretical maximum but the web server can hold this load for a long time. The algorithm is the following.
+
+### Preparing
+1. Interprets the given command prompt parameters (see below).
+2. Parses the profiles from text files (**PROFILE** parameter)
+3. Starts measurement with a short warmup period (**WARMUPTIME** parameter).
+4. Activates the profiles with their initial count and the web server charging starts. Also starts the monitoring of the average response time that is the base of the maximal loading detection.
+
+### Heating
+1. Adds more profiles periodically (**GROWINGTIME** parameter and *growth* part in the profiles). If the initial profile counts were correctly selected, the average response time will constantly increase.
+2. After a while, the response time growth slows down and stops. In this time the server has been reached its maximum performance at this time but the active profiles will overload him now.
+
+### Cooling
+1. Decreases profile counts periodically relatively slow. This period is 320 sec and not configurable in this version. Because the webserver is overloaded now, the average response time is not changed for a long time.
+2. Continues the decreasing until the average response time really become shorten.
+3. This point is the web server's safe performance maximum. The benchmark value is the summary of the current profile counts.
+4. The tool finalizes the workflow, writes logs and closes the output files and terminates.
 
 As a result, the tool generates a csv file (see below) and provides the last average response times *before the limit has been reached*.
 
@@ -65,6 +74,7 @@ It is recommended to set the number of added profiles to a small number to let t
 "Visitor:10+2,Aministrator:5+1"
 "Visitor:16+4|200,Editor:8+2|20,Aministrator:4+1|10"
 ```
+Every profile name is projected to a file name in the `exelocation\Profiles` directory.
 
 ##### SITE (alias: S) - required
 Comma separated url list (e.g.: *'http://mysite1,http://mysite1'*). These urls will be selected and used in a random order and will be supplemented by the relative urls from the current profile.
