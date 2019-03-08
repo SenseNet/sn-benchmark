@@ -24,17 +24,17 @@ The tool can detect the webserver's maximum safe performance automatically. The 
 1. Interprets the given command prompt parameters (see below).
 2. Parses the profiles from text files (**PROFILE** parameter)
 3. Starts measurement with a short warmup period (**WARMUPTIME** parameter).
-4. Activates the profiles with their initial count and the web server charging starts. Also starts the monitoring of the average response time that is the base of the maximal loading detection.
+4. Activates the profiles with their initial count and starts sending real load to the web server. Also starts monitoring the average response time that is the base of the maximal loading detection.
 
 ### Heating
 1. Adds more profiles periodically (**GROWINGTIME** parameter and *growth* part in the profiles). If the initial profile counts were correctly selected, the average response time will constantly increase.
-2. After a while, the response time growth slows down and stops. In this time the server has been reached its maximum performance at this time but the active profiles will overload him now.
+2. After a while the response time growth slows down and stops. At that time the server has reached its maximum performance and the active profiles will overload it now.
 
 ### Cooling
-1. Decreases profile counts periodically relatively slow. This period is 320 sec and not configurable in this version. Because the webserver is overloaded now, the average response time is not changed for a long time.
-2. Continues the decreasing until the average response time really become shorten.
+1. Decreases profile counts periodically relatively slowly. This period is 320 sec long and is not configurable in this version. Because the webserver is overloaded now, the average response time will not change for a long time.
+2. Continues the decreasing until the average response time starts becoming shorter.
 3. This point is the web server's safe performance maximum. The benchmark value is the summary of the current profile counts.
-4. The tool finalizes the workflow, writes logs and closes the output files and terminates.
+4. The tool finalizes the workflow, writes logs, closes output files and terminates.
 
 As a result, the tool generates a csv file (see below) and provides the last average response times *before the limit has been reached*.
 
