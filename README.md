@@ -1,7 +1,6 @@
 # sensenet Benchmark
-[![Join the chat at https://gitter.im/SenseNet/sn-benchmark](https://badges.gitter.im/SenseNet/sn-benchmark.svg)](https://gitter.im/SenseNet/sn-benchmark?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[sensenet](http://sensenet.com), an enterprise content management platform that is capable of handling many users and a huge number of content in a single Content Repository, constantly evolves. This requires a stable **benchmarking method** that lets us measure the impact of our decisions along the way. It may also help measuring performance on specific implementations, not just the core platform.
+[sensenet](http://sensenet.com), a content management platform that is capable of handling many users and a huge number of content in a single Content Repository, constantly evolves. This requires a stable **benchmarking method** that lets us measure the impact of our decisions along the way. It may also help measuring performance on specific implementations, not just the core platform.
 
 ![alt text](/docs/images/benchmark-details-2.png "performance ladder")
 
@@ -15,7 +14,7 @@
 ## How it works
 <a name="HowItWorks"></a>
 
-For the benchmark tool to work, first you will need some preparation on the [measuring environment](/docs/environment.md).
+For the benchmark tool to work, first you will need some preparation on the measuring environment.
 
 sensenet benchmarking is built around **Profiles**. A profile represents a typical user (e.g. Visitor, Editor) whose activity can be described by a **set of simple actions**. At the first phase the benchmark tool starts to put load on the site with a configured number of profiles, then it **adds more gradually**. The tool stops when the portal starts responding slower than a predefined threshold.
 
@@ -72,3 +71,9 @@ You should pay attention to the generated log files though: after a few iteratio
 ## Hardware
 <a name="Hardware"></a>
 The hardware your site runs on is important from the measurement's point of view. It does not make sense to compare two performance measurements made on a different hardware - unless you want to measure the performance of the hardware that usually is not the case.
+
+# sensenet as a service (SNaaS) - use sensenet from the cloud
+
+For a monthly subscription fee, we store all your content and data, relieving you of all maintenance-related tasks and installation, ensuring easy onboarding, easy updates, and patches.
+
+https://www.sensenet.com/pricing
